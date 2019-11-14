@@ -2,7 +2,7 @@ import React, { Component } from "react";
 import { Text, TouchableOpacity, View, Image } from "react-native";
 import { scale, verticalScale } from "react-native-size-matters";
 
-import { formatNumber } from "../utils/variables";
+import { formatNumber, screenWidth } from "../utils/variables";
 
 export default class CartItem extends Component {
   constructor(props) {
@@ -64,8 +64,7 @@ export default class CartItem extends Component {
                 marginTop: 5,
                 fontSize: scale(12),
                 fontWeight: "700",
-                letterSpacing: -0.36,
-                width: 120
+                letterSpacing: -0.36
               }}
             >
               {title}

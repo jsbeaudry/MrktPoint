@@ -6,6 +6,7 @@ import {
   TextInput,
   StatusBar,
   View,
+  TouchableHighlight,
   FlatList
 } from "react-native";
 import _ from "lodash";
@@ -20,7 +21,7 @@ import {
   scaleIndice
 } from "../utils/variables";
 import { Card } from "../components";
-
+import { getAll } from "../services";
 export default class Search extends React.Component {
   constructor(props) {
     super(props);
@@ -58,80 +59,44 @@ export default class Search extends React.Component {
   }
 
   componentWillMount() {
-    let business = new Business();
-    business.name = "Thompson Electronics";
-    business.image =
-      "http://www.flashhaiti.com/ads-library/Thompson%20Cell/thompson_cell-ad9.jpg";
-    business.subTitle = "slogan i don't know";
-    business.delivery_time = "10 - 20 mins";
-    business.is_open = true;
-    business.free_delivery = true;
-    this.state.businesses.push(business);
+    // let business = new Business();
+    // business.name = "Thompson Electronics";
+    // business.image =
+    //   "http://www.flashhaiti.com/ads-library/Thompson%20Cell/thompson_cell-ad9.jpg";
+    // business.subTitle = "slogan i don't know";
+    // business.delivery_time = "10 - 20 mins";
+    // business.is_open = true;
+    // business.free_delivery = true;
+    // this.state.businesses.push(business);
 
-    business = new Business();
-    business.name = "PC Express";
-    business.subTitle = "slogan i don't know";
-    business.delivery_time = "15 - 25 mins";
-    business.is_open = false;
-    business.free_delivery = false;
-    business.image =
-      "https://flashhaiti.com/public/business_image/1358989931PcXpress-logo2.jpg";
-    this.state.businesses.push(business);
+    // const business_concat = _.concat(this.state.businesses, []);
 
-    business = new Business();
-    business.name = "CompHaiti";
-    business.subTitle = "slogan i don't know";
-    business.delivery_time = "12 - 22 mins";
-    business.is_open = true;
-    business.free_delivery = true;
-    business.image =
-      "https://i1.sndcdn.com/avatars-000047663530-0vhphz-t500x500.jpg";
-    this.state.businesses.push(business);
+    // this.setState({
+    //   businesses: business_concat
+    // });
 
-    business = new Business();
-    business.name = "ABC Electronics";
-    business.subTitle = "slogan i don't know";
-    business.delivery_time = "12 - 22 mins";
-    business.is_open = true;
-    business.free_delivery = true;
-    business.image =
-      "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcShG5McNVMDYkrKwPWnJu4X3vkMSxebETw15oPUPQgqlIpDMn0XMw";
-    this.state.businesses.push(business);
-
-    business = new Business();
-    business.name = "Shop Easy HAITI";
-    business.subTitle = "slogan i don't know";
-    business.delivery_time = "12 - 22 mins";
-    business.is_open = true;
-    business.free_delivery = true;
-    business.image =
-      "https://lh3.googleusercontent.com/SjGHAZkxdMF2oEepADZtWxPQMaCcX-ORstYaRc5MnzYwAr3Y3cg3ca4a-L8GGtlncik";
-    this.state.businesses.push(business);
-
-    business = new Business();
-    business.name = "smart tech haiti";
-    business.subTitle = "slogan i don't know";
-    business.delivery_time = "12 - 22 mins";
-    business.is_open = true;
-    business.free_delivery = true;
-    business.image =
-      "https://flashhaiti.com/public/business_image/smart_tech_haiti-logo.jpg";
-    this.state.businesses.push(business);
-
-    business = new Business();
-    business.name = "keijzer";
-    business.subTitle = "slogan i don't know";
-    business.delivery_time = "12 - 22 mins";
-    business.is_open = true;
-    business.free_delivery = true;
-    business.image =
-      "https://www.manmanpemba.com/wp-content/uploads/2011/08/keijzer.jpg";
-    this.state.businesses.push(business);
-
-    const business_concat = _.concat(this.state.businesses, []);
-
-    this.setState({
-      businesses: business_concat
+    getAll("assets", {}).then(results => {
+      this.setState({
+        businesses: results.map(element => {
+          return {
+            id: element._id,
+            owner_id: element.owner_id,
+            type: element.type,
+            name: element.legalName,
+            logo: element.logo,
+            // image:
+            //   element.pictures && element.pictures[0] && element.pictures[0].url
+            //     ? element.pictures[0].url
+            //     : element.logo,
+            image: require("../images/logo_mrkt.jpg"),
+            subTitle: element.slogan,
+            categories: element.categories ? element.categories : [],
+            delivery_time: "10 - 20 mins",
+            is_open: true,
+            free_delivery: true
+          };
+        })
+      });
     });
   }
 
@@ -164,17 +129,29 @@ export default class Search extends React.Component {
               horizontal
               data={categories}
               keyExtractor={item => JSON.stringify(item)}
-              renderItem={({ item }) => (
-                <Card
-                  imageUrl={{ uri: item.image }}
-                  title={item.title}
-                  borderRad={10}
-                  h={222}
-                  opacity={0.4}
-                  w={167}
-                  showText
-                />
-              )}
+              renderItem={({ item }) =>
+                <TouchableHighlight
+                  style={{ borderRadius: 10 }}
+                  underlayColor={"#eee"}
+                  style={{
+                    flex: 1
+                  }}
+                  onPress={() =>
+                    this.props.navigation.navigate("AllProducts", {
+                      backScreen: "Main",
+                      pageText: item.title
+                    })}
+                >
+                  <Card
+                    imageUrl={{ uri: item.image }}
+                    title={item.title}
+                    borderRad={10}
+                    h={222}
+                    opacity={0.4}
+                    w={167}
+                    showText
+                  />
+                </TouchableHighlight>}
             />
           </View>
 
@@ -214,10 +191,7 @@ export default class Search extends React.Component {
                 style={{
                   flex: 1
                 }}
-                onPress={() => {
-                  this.props.navigation.navigate("MoreItems");
-                  // this.refs.modal1.open();
-                }}
+                onPress={() => {}}
               >
                 <Text
                   style={{
@@ -245,15 +219,19 @@ export default class Search extends React.Component {
                 style={{
                   flex: 1,
                   paddingVertical: 10,
-                  paddingLeft: 10
+                  paddingLeft: 10,
+                  alignSelf: "flex-start",
+                  width: screenWidth
                 }}
                 showsVerticalScrollIndicator={false}
                 showsHorizontalScrollIndicator={false}
                 data={businesses}
                 horizontal
                 keyExtractor={item => JSON.stringify(item)}
-                renderItem={({ item }) => (
-                  <TouchableOpacity
+                renderItem={({ item }) =>
+                  <TouchableHighlight
+                    style={{ borderRadius: 30 }}
+                    underlayColor={"#eee"}
                     onPress={() => {
                       this.props.navigation.navigate("Shop", {
                         business: item
@@ -261,14 +239,13 @@ export default class Search extends React.Component {
                     }}
                   >
                     <Card
-                      imageUrl={{ uri: item.image }}
+                      imageUrl={item.image}
                       borderRad={30}
                       h={137}
                       w={137}
                       showText={false}
                     />
-                  </TouchableOpacity>
-                )}
+                  </TouchableHighlight>}
               />
             </View>
           </View>
@@ -319,7 +296,7 @@ export default class Search extends React.Component {
               }}
             />
           </View>
-          <TouchableOpacity
+          {/* <TouchableOpacity
             onPress={() => {
               this.props.navigation.navigate("Carts");
             }}
@@ -339,7 +316,7 @@ export default class Search extends React.Component {
               size={moderateScale(17, scaleIndice)}
               color={colors.white}
             />
-          </TouchableOpacity>
+          </TouchableOpacity> */}
         </View>
       </View>
     );

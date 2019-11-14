@@ -7,7 +7,8 @@ import {
   StatusBar,
   View,
   FlatList,
-  ActivityIndicator
+  ActivityIndicator,
+  TouchableHighlight
 } from "react-native";
 import FontAwesome from "react-native-vector-icons/FontAwesome";
 import { moderateScale } from "react-native-size-matters";
@@ -30,7 +31,6 @@ export default class Tab1 extends Component {
     this.state = {
       businesses: []
     };
-    //alert(mystates.state.items.length);
   }
 
   componentWillMount() {
@@ -51,8 +51,7 @@ export default class Tab1 extends Component {
             //   element.pictures && element.pictures[0] && element.pictures[0].url
             //     ? element.pictures[0].url
             //     : element.logo,
-            image:
-              "http://archive.warwicka.co.uk/file_store/archive_images/Shop_Logo_1_July120151.jpg",
+            image: require("../images/logo_mrkt.jpg"),
             subTitle: element.slogan,
             categories: element.categories ? element.categories : [],
             delivery_time: "10 - 20 mins",
@@ -70,7 +69,7 @@ export default class Tab1 extends Component {
     const { businesses } = this.state;
     return (
       <Subscribe to={[StateContainer]}>
-        {container => (
+        {container =>
           <View style={{ flex: 1 }}>
             <StatusBar backgroundColor="#fff" barStyle="dark-content" />
 
@@ -113,9 +112,9 @@ export default class Tab1 extends Component {
                   flex: 1
                 }}
               >
-                {businesses.length == 0 ? (
-                  <ActivityIndicator style={{ marginTop: 200 }} />
-                ) : null}
+                {businesses.length == 0
+                  ? <ActivityIndicator style={{ marginTop: 200 }} />
+                  : null}
 
                 <FlatList
                   style={{
@@ -126,8 +125,10 @@ export default class Tab1 extends Component {
                   data={businesses}
                   numColumns={2}
                   keyExtractor={item => JSON.stringify(item)}
-                  renderItem={({ item }) => (
-                    <TouchableOpacity
+                  renderItem={({ item }) =>
+                    <TouchableHighlight
+                      style={{ borderRadius: 10 }}
+                      underlayColor={"#f9f9f9"}
                       onPress={() => {
                         //alert(container.getItems().length);
                         this.props.navigation.navigate("Shop", {
@@ -136,21 +137,20 @@ export default class Tab1 extends Component {
                       }}
                     >
                       <CardItem
-                        image={{ uri: item.image }}
+                        image={item.image}
                         logo={{ uri: item.logo }}
                         backgroundColor="#596b9f"
                         title={
-                          item.name.length <= 17
+                          item.name.length <= 20
                             ? item.name
-                            : item.name.substring(0, 17) + "..."
+                            : item.name.substring(0, 20) + "..."
                         }
                         showDelivery
                         subTitle={item.subTitle}
                         deliveryTime={item.delivery_time}
                         isOpen={item.is_open}
                       />
-                    </TouchableOpacity>
-                  )}
+                    </TouchableHighlight>}
                 />
               </View>
             </ScrollView>
@@ -221,8 +221,7 @@ export default class Tab1 extends Component {
                 />
               </TouchableOpacity>
             </View>
-          </View>
-        )}
+          </View>}
       </Subscribe>
     );
   }

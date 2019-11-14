@@ -247,157 +247,155 @@ class Maps extends React.Component {
     const { markers, businesses } = this.state;
     return (
       <View style={styles.container}>
-        {this.state.viewDetails === true ? (
-          <View
-            style={{
-              opacity: 1,
-              position: "absolute",
-              top: 20,
-              height: HEADER_HEIGHT,
-              width: screenWidth,
-              right: 0,
-              zIndex: 999,
-              flexDirection: "row",
-              backgroundColor: "transparent",
-              paddingHorizontal: 15
-            }}
-          >
-            <TouchableOpacity
+        {this.state.viewDetails === true
+          ? <View
               style={{
-                flex: 20,
-
-                justifyContent: "center",
-                alignItems: "flex-start"
+                opacity: 1,
+                position: "absolute",
+                top: 20,
+                height: HEADER_HEIGHT,
+                width: screenWidth,
+                right: 0,
+                zIndex: 999,
+                flexDirection: "row",
+                backgroundColor: "transparent",
+                paddingHorizontal: 15
               }}
-              onPress={() => this.props.navigation.goBack()}
             >
+              <TouchableOpacity
+                style={{
+                  flex: 20,
+
+                  justifyContent: "center",
+                  alignItems: "flex-start"
+                }}
+                onPress={() => this.props.navigation.goBack()}
+              >
+                <View
+                  style={{
+                    backgroundColor: "#fff",
+                    height: 34,
+                    width: 34,
+                    borderRadius: 50,
+                    justifyContent: "center",
+                    alignItems: "center"
+                  }}
+                >
+                  <Ionicons
+                    name={
+                      Platform.OS === "ios" ? "ios-arrow-back" : "md-arrow-back"
+                    }
+                    type="ionicon"
+                    color={colors.blue}
+                    opacity={1}
+                    size={moderateScale(26, scaleIndice)}
+                    iconStyle={{}}
+                  />
+                </View>
+              </TouchableOpacity>
               <View
                 style={{
-                  backgroundColor: "#fff",
-                  height: 34,
-                  width: 34,
-                  borderRadius: 50,
+                  flex: 60,
+                  backgroundColor: "transparent",
                   justifyContent: "center",
                   alignItems: "center"
                 }}
               >
-                <Ionicons
-                  name={
-                    Platform.OS === "ios" ? "ios-arrow-back" : "md-arrow-back"
-                  }
-                  type="ionicon"
-                  color={colors.blue}
-                  opacity={1}
-                  size={moderateScale(26, scaleIndice)}
-                  iconStyle={{}}
-                />
+                <Text
+                  style={{
+                    color: "#000",
+                    opacity: 1,
+                    fontSize: moderateScale(16, scaleIndice),
+                    fontWeight: "600"
+                  }}
+                >
+                  {"Location & Hours"}
+                </Text>
               </View>
-            </TouchableOpacity>
-            <View
-              style={{
-                flex: 60,
-                backgroundColor: "transparent",
-                justifyContent: "center",
-                alignItems: "center"
-              }}
-            >
-              <Text
-                style={{
-                  color: "#000",
-                  opacity: 1,
-                  fontSize: moderateScale(16, scaleIndice),
-                  fontWeight: "600"
-                }}
-              >
-                {"Location & Hours"}
-              </Text>
-            </View>
-            <View
-              style={{
-                flex: 20,
-                backgroundColor: "transparent",
-                justifyContent: "center",
-                alignItems: "center",
-                flexDirection: "row"
-              }}
-            ></View>
-          </View>
-        ) : (
-          <View
-            style={{
-              opacity: 1,
-              position: "absolute",
-              top: 20,
-              height: HEADER_HEIGHT,
-              width: screenWidth,
-              right: 0,
-              zIndex: 999,
-              flexDirection: "row",
-              backgroundColor: "transparent",
-              paddingHorizontal: 15
-            }}
-          >
-            <TouchableOpacity
-              style={{
-                flex: 20,
-
-                justifyContent: "center",
-                alignItems: "flex-start"
-              }}
-              onPress={() => this.props.navigation.goBack()}
-            >
               <View
                 style={{
-                  backgroundColor: "#fff",
-                  height: 34,
-                  width: 34,
-                  borderRadius: 50,
+                  flex: 20,
+                  backgroundColor: "transparent",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  flexDirection: "row"
+                }}
+              />
+            </View>
+          : <View
+              style={{
+                opacity: 1,
+                position: "absolute",
+                top: 20,
+                height: HEADER_HEIGHT,
+                width: screenWidth,
+                right: 0,
+                zIndex: 999,
+                flexDirection: "row",
+                backgroundColor: "transparent",
+                paddingHorizontal: 15
+              }}
+            >
+              <TouchableOpacity
+                style={{
+                  flex: 20,
+
+                  justifyContent: "center",
+                  alignItems: "flex-start"
+                }}
+                onPress={() => this.props.navigation.goBack()}
+              >
+                <View
+                  style={{
+                    backgroundColor: "#fff",
+                    height: 34,
+                    width: 34,
+                    borderRadius: 50,
+                    justifyContent: "center",
+                    alignItems: "center"
+                  }}
+                >
+                  <Ionicons
+                    name={
+                      Platform.OS === "ios" ? "ios-arrow-back" : "md-arrow-back"
+                    }
+                    type="ionicon"
+                    color={colors.blue}
+                    opacity={1}
+                    size={moderateScale(26, scaleIndice)}
+                    iconStyle={{}}
+                  />
+                </View>
+              </TouchableOpacity>
+              <View
+                style={{
+                  flex: 60,
+                  backgroundColor: "transparent",
                   justifyContent: "center",
                   alignItems: "center"
                 }}
               >
-                <Ionicons
-                  name={
-                    Platform.OS === "ios" ? "ios-arrow-back" : "md-arrow-back"
-                  }
-                  type="ionicon"
-                  color={colors.blue}
-                  opacity={1}
-                  size={moderateScale(26, scaleIndice)}
-                  iconStyle={{}}
-                />
+                <Text
+                  style={{
+                    color: "#000",
+                    opacity: 1,
+                    fontSize: moderateScale(16, scaleIndice),
+                    fontWeight: "600"
+                  }}
+                >
+                  {"Discovery"}
+                </Text>
               </View>
-            </TouchableOpacity>
-            <View
-              style={{
-                flex: 60,
-                backgroundColor: "transparent",
-                justifyContent: "center",
-                alignItems: "center"
-              }}
-            >
-              <Text
+              <View
                 style={{
-                  color: "#000",
-                  opacity: 1,
-                  fontSize: moderateScale(16, scaleIndice),
-                  fontWeight: "600"
+                  flex: 20,
+                  backgroundColor: "transparent",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  flexDirection: "row"
                 }}
-              >
-                {"Discovery"}
-              </Text>
-            </View>
-            <View
-              style={{
-                flex: 20,
-                backgroundColor: "transparent",
-                justifyContent: "center",
-                alignItems: "center",
-                flexDirection: "row"
-              }}
-            ></View>
-          </View>
-        )}
+              />
+            </View>}
 
         <MapView
           ref={map => {
@@ -430,111 +428,91 @@ class Maps extends React.Component {
             );
           })}
         </MapView>
-        {this.state.viewDetails === false ? (
-          <View
-            style={{
-              backgroundColor: "#fff",
-              height: 250,
-              width: screenWidth,
-              position: "absolute",
-              top: 0,
-              borderBottomLeftRadius: 20,
-              borderBottomRightRadius: 20,
-              paddingTop: 80
-            }}
-          >
-            <Text
+        {this.state.viewDetails === false
+          ? <View
               style={{
-                color: colors.gray,
-                fontSize: 20,
-                marginTop: 24,
-                marginBottom: 7,
-                marginLeft: 20
-              }}
-            >
-              {"Drag or move map"}
-            </Text>
-            <View
-              style={{
-                flexDirection: "row",
-                paddingHorizontal: 20,
-                justifyContent: "space-between",
-                alignItems: "center"
-              }}
-            >
-              <TextInput
-                placeholder={"Type any location"}
-                value={this.state.search}
-                onChangeText={text => this.setState({ search: text })}
-                style={{
-                  height: 40,
-                  width: screenWidth - 100,
-                  fontSize: 17,
-                  borderColor: "#eee",
-                  fontWeight: "500",
-                  borderWidth: 0
-                }}
-              />
-              <Ionicons
-                name={"ios-search"}
-                style={{ marginRight: 0 }}
-                size={30}
-                color={colors.blue}
-              />
-            </View>
-            <View
-              style={{
-                borderTopColor: "#eee",
-                borderTopWidth: 1,
-                alignItems: "center",
-                justifyContent: "center",
-                marginTop: 5
+                backgroundColor: "#fff",
+
+                width: screenWidth,
+                position: "absolute",
+                top: 0,
+                borderBottomLeftRadius: 20,
+                borderBottomRightRadius: 20,
+                paddingTop: 50,
+                paddingBottom: 20
               }}
             >
               <Text
                 style={{
-                  color: colors.blue,
-                  fontWeight: "bold",
-                  fontSize: 16,
-                  marginTop: 25
+                  color: colors.gray,
+                  fontSize: 15,
+                  marginTop: 35,
+                  marginBottom: 7,
+                  marginLeft: 20
                 }}
               >
-                {"VIEW MORE"}
+                {"Drag or move map"}
               </Text>
+              <View
+                style={{
+                  flexDirection: "row",
+                  paddingHorizontal: 20,
+                  justifyContent: "space-between",
+                  alignItems: "center"
+                }}
+              >
+                <TextInput
+                  placeholder={"Type any location"}
+                  value={this.state.search}
+                  onChangeText={text => this.setState({ search: text })}
+                  style={{
+                    height: 40,
+                    width: screenWidth - 100,
+                    fontSize: 14,
+                    borderColor: "#eee",
+                    fontWeight: "500",
+                    borderWidth: 0
+                  }}
+                />
+                <Ionicons
+                  name={"ios-search"}
+                  style={{ marginRight: 0 }}
+                  size={30}
+                  color={colors.blue}
+                />
+              </View>
+              <View
+                style={{
+                  borderTopColor: "#eee",
+                  borderTopWidth: 1,
+                  alignItems: "center",
+                  justifyContent: "center",
+                  marginTop: 5
+                }}
+              >
+                <Text
+                  style={{
+                    color: colors.blue,
+                    fontWeight: "bold",
+                    fontSize: 12,
+                    marginTop: 25
+                  }}
+                >
+                  {"VIEW MORE"}
+                </Text>
+              </View>
             </View>
-          </View>
-        ) : null}
-        {this.state.viewDetails === true ? (
-          <View
-            style={{
-              position: "absolute",
-              bottom: 20,
-              height: 400,
-              width: screenWidth - 70,
-              alignSelf: "center",
-              borderRadius: 10,
-              backgroundColor: "#fff"
-            }}
-          >
-            <Image
-              source={{
-                uri:
-                  "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSgTDOzadSH7HZlU96Ogy2XzMynwk4o4Epcvw12FmpBYRT0B_aLrA"
-              }}
-              borderRadius={15}
+          : null}
+        {this.state.viewDetails === true
+          ? <View
               style={{
                 position: "absolute",
-                top: -50,
-                left: 20,
-                height: 100,
-                width: 180
-              }}
-            />
-            <View
-              style={{
-                flexDirection: "row",
-                marginTop: 70,
-                marginHorizontal: 20
+                bottom: 20,
+                height: 400,
+                width: screenWidth - 70,
+                alignSelf: "center",
+                borderRadius: 10,
+                backgroundColor: "#fff"
               }}
             >
               <Image
@@ -542,398 +520,419 @@ class Maps extends React.Component {
                   uri:
                     "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSgTDOzadSH7HZlU96Ogy2XzMynwk4o4Epcvw12FmpBYRT0B_aLrA"
                 }}
-                borderRadius={25}
+                borderRadius={15}
                 style={{
-                  height: 50,
-                  width: 50
+                  position: "absolute",
+                  top: -50,
+                  left: 20,
+                  height: 100,
+                  width: 180
                 }}
               />
-              <View style={{ marginLeft: 10 }}>
-                <Text
-                  style={{
-                    color: colors.blue,
-                    fontSize: 12,
-                    fontWeight: "800"
+              <View
+                style={{
+                  flexDirection: "row",
+                  marginTop: 70,
+                  marginHorizontal: 20
+                }}
+              >
+                <Image
+                  source={{
+                    uri:
+                      "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSgTDOzadSH7HZlU96Ogy2XzMynwk4o4Epcvw12FmpBYRT0B_aLrA"
                   }}
-                >
-                  {"4.5 KM"}
-                </Text>
-                <Text
+                  borderRadius={25}
                   style={{
-                    color: "#000",
-                    fontSize: 16,
-                    fontWeight: "bold",
-                    marginVertical: 1
+                    height: 50,
+                    width: 50
                   }}
-                >
-                  {"Magdoos Restaurant"}
-                </Text>
-                <Text
-                  style={{
-                    color: colors.grey,
-                    fontSize: 11
-                  }}
-                >
-                  {"#30, Rue Ogé, Pétion-Ville, Haiti"}
-                </Text>
-              </View>
-            </View>
-            <View
-              style={{
-                flexDirection: "row",
-                marginTop: 20,
-                marginHorizontal: 20
-              }}
-            >
-              <View style={{}}>
-                <Text
-                  style={{
-                    color: colors.gray,
-                    fontSize: 15,
-                    marginBottom: 10,
-                    fontWeight: "800"
-                  }}
-                >
-                  {"Rating"}
-                </Text>
-                <View style={{ flexDirection: "row", alignItems: "center" }}>
-                  {[1, 2, 3, 4, 5].map(rate => (
-                    <View
-                      key={rate}
-                      style={{
-                        height: 7,
-                        width: 7,
-                        borderRadius: 3,
-                        margin: 2,
-                        backgroundColor: colors.blue
-                      }}
-                    />
-                  ))}
+                />
+                <View style={{ marginLeft: 10 }}>
                   <Text
                     style={{
-                      color: colors.black,
-                      fontSize: 16,
-
+                      color: colors.blue,
+                      fontSize: 12,
                       fontWeight: "800"
                     }}
                   >
-                    {" 4.5"}
+                    {"4.5 KM"}
                   </Text>
-                </View>
-              </View>
-              <View style={{ marginHorizontal: 20 }}>
-                <Text
-                  style={{
-                    color: colors.gray,
-                    fontSize: 15,
-                    marginBottom: 5,
-                    fontWeight: "800"
-                  }}
-                >
-                  {"Distance"}
-                </Text>
-                <Text
-                  style={{
-                    color: colors.black,
-                    fontSize: 20,
-                    marginBottom: 10,
-                    fontWeight: "600"
-                  }}
-                >
-                  {"20m"}
-                </Text>
-              </View>
-              <TouchableOpacity
-                style={{
-                  height: 35,
-                  width: 35,
-                  marginRight: 10,
-                  backgroundColor: colors.blue,
-                  alignSelf: "center",
-                  borderRadius: 17,
-                  justifyContent: "center",
-                  alignItems: "center"
-                }}
-              >
-                <Icon name={"phone"} size={17} color="#fff" />
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={{
-                  height: 35,
-                  width: 35,
-                  marginRight: 10,
-                  backgroundColor: colors.blue,
-                  alignSelf: "center",
-                  borderRadius: 17,
-                  justifyContent: "center",
-                  alignItems: "center"
-                }}
-              >
-                <Icon name={"phone"} size={17} color="#fff" />
-              </TouchableOpacity>
-            </View>
-            <TouchableOpacity
-              onPress={() =>
-                this.setState(prevState => ({
-                  viewDetails: !prevState.viewDetails
-                }))
-              }
-              style={{
-                position: "absolute",
-                top: 10,
-                right: 10,
-                height: 40,
-                width: 40,
-                backgroundColor: "transparent",
-                alignItems: "center",
-                borderRadius: 20,
-                justifyContent: "center"
-              }}
-            >
-              <Ionicons name={"ios-close"} size={35} color={"red"} />
-            </TouchableOpacity>
-
-            <View
-              style={{
-                backgroundColor: "#f0f0f0",
-                alignItems: "center",
-                justifyContent: "center",
-                height: 80
-              }}
-            >
-              <FlatList
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                style={{
-                  alignSelf: "center",
-                  width: "100%",
-                  height: 50,
-                  marginTop: 10,
-                  paddingHorizontal: 10
-                }}
-                keyExtractor={item => JSON.stringify(item)}
-                data={[1, 2, 3, 4, 5, 6, 7, 8]}
-                renderItem={({ item }) => (
-                  <Image
-                    source={{
-                      uri:
-                        "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSgTDOzadSH7HZlU96Ogy2XzMynwk4o4Epcvw12FmpBYRT0B_aLrA"
-                    }}
-                    borderRadius={8}
-                    style={{
-                      width: 74,
-                      height: 53,
-                      margin: 5
-                    }}
-                  />
-                )}
-              />
-            </View>
-            <View
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                justifyContent: "space-between",
-                marginHorizontal: 20,
-                marginTop: 20
-              }}
-            >
-              <Text
-                style={{
-                  color: colors.black,
-                  fontSize: 12,
-                  marginBottom: 5,
-                  fontWeight: "400"
-                }}
-              >
-                {"Tuesday - Saturday"}
-              </Text>
-
-              <Text
-                style={{
-                  color: colors.black,
-                  fontSize: 12,
-                  marginBottom: 5,
-                  fontWeight: "400"
-                }}
-              >
-                {"10:00 - 19:00"}
-              </Text>
-            </View>
-            <View
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                justifyContent: "space-between",
-                marginHorizontal: 20,
-                marginTop: 0
-              }}
-            >
-              <Text
-                style={{
-                  color: colors.black,
-                  fontSize: 12,
-                  marginBottom: 10,
-                  fontWeight: "400"
-                }}
-              >
-                {"Sunday - Monday"}
-              </Text>
-
-              <Text
-                style={{
-                  color: colors.blue,
-                  fontSize: 12,
-                  marginBottom: 10,
-                  fontWeight: "600"
-                }}
-              >
-                {"Closed"}
-              </Text>
-            </View>
-
-            <Button
-              onClick={() => {
-                this.props.navigation.navigate("Signup");
-              }}
-              textStyle={{ color: "#fff", fontWeight: "bold" }}
-              text="MORE INFO"
-              buttonStyle={{
-                alignSelf: "center",
-                backgroundColor: colors.blue,
-                height: 45,
-                width: screenWidth - 130,
-                borderRadius: 50,
-                justifyContent: "center",
-                alignItems: "center"
-              }}
-            />
-          </View>
-        ) : (
-          <Animated.ScrollView
-            horizontal
-            scrollEventThrottle={1}
-            showsHorizontalScrollIndicator={false}
-            snapToInterval={CARD_WIDTH}
-            onScroll={Animated.event(
-              [
-                {
-                  nativeEvent: {
-                    contentOffset: {
-                      x: this.animation
-                    }
-                  }
-                }
-              ],
-              { useNativeDriver: true }
-            )}
-            style={[styles.scrollView, { alignSelf: "center" }]}
-            contentContainerStyle={styles.endPadding}
-          >
-            {businesses
-              .filter(
-                i =>
-                  i.address
-                    .toLowerCase()
-                    .indexOf(this.state.search.toLowerCase()) != -1
-              )
-              .map(business => (
-                <TouchableOpacity
-                  onPress={() =>
-                    this.setState(prevState => ({
-                      viewDetails: !prevState.viewDetails
-                    }))
-                  }
-                  key={JSON.stringify(business)}
-                  style={{
-                    height: 130,
-                    marginVertical: 30,
-                    marginHorizontal: 10,
-                    width: 250,
-
-                    alignSelf: "center",
-                    borderRadius: 10,
-                    backgroundColor: "#fff"
-                  }}
-                >
-                  <Image
-                    source={{
-                      uri: business.image
-                    }}
-                    borderRadius={15}
-                    style={{
-                      position: "absolute",
-                      top: -40,
-                      left: 20,
-                      height: 100,
-                      width: 100,
-                      backgroundColor: "#fff",
-                      borderColor: "rgba(0,0,0,0.05)",
-                      borderWidth: 1
-                    }}
-                  />
-                  <View
-                    style={{
-                      justifyContent: "flex-end",
-                      flexDirection: "row",
-                      marginTop: 10,
-                      marginRight: 10
-                    }}
-                  >
-                    <TouchableOpacity
-                      style={{
-                        height: 30,
-                        width: 30,
-                        marginRight: 10,
-                        backgroundColor: colors.blue,
-                        alignSelf: "center",
-                        borderRadius: 15,
-                        justifyContent: "center",
-                        alignItems: "center"
-                      }}
-                    >
-                      <Ionicons name={"ios-navigate"} size={17} color="#fff" />
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={{
-                        height: 30,
-                        width: 30,
-                        marginRight: 10,
-                        backgroundColor: colors.blue,
-                        alignSelf: "center",
-                        borderRadius: 15,
-                        justifyContent: "center",
-                        alignItems: "center"
-                      }}
-                    >
-                      <Icon name={"phone"} size={17} color="#fff" />
-                    </TouchableOpacity>
-                  </View>
                   <Text
                     style={{
                       color: "#000",
-                      fontSize: 20,
+                      fontSize: 16,
                       fontWeight: "bold",
-                      marginTop: 24,
-                      marginBottom: 3,
-                      marginLeft: 20
+                      marginVertical: 1
                     }}
                   >
-                    {business.name}
+                    {"Magdoos Restaurant"}
                   </Text>
                   <Text
                     style={{
                       color: colors.grey,
-                      fontSize: 13,
-                      marginLeft: 20
+                      fontSize: 11
                     }}
                   >
-                    {business.address}
+                    {"#30, Rue Ogé, Pétion-Ville, Haiti"}
                   </Text>
+                </View>
+              </View>
+              <View
+                style={{
+                  flexDirection: "row",
+                  marginTop: 20,
+                  marginHorizontal: 20
+                }}
+              >
+                <View style={{}}>
+                  <Text
+                    style={{
+                      color: colors.gray,
+                      fontSize: 15,
+                      marginBottom: 10,
+                      fontWeight: "800"
+                    }}
+                  >
+                    {"Rating"}
+                  </Text>
+                  <View style={{ flexDirection: "row", alignItems: "center" }}>
+                    {[1, 2, 3, 4, 5].map(rate =>
+                      <View
+                        key={rate}
+                        style={{
+                          height: 7,
+                          width: 7,
+                          borderRadius: 3,
+                          margin: 2,
+                          backgroundColor: colors.blue
+                        }}
+                      />
+                    )}
+                    <Text
+                      style={{
+                        color: colors.black,
+                        fontSize: 16,
+
+                        fontWeight: "800"
+                      }}
+                    >
+                      {" 4.5"}
+                    </Text>
+                  </View>
+                </View>
+                <View style={{ marginHorizontal: 20 }}>
+                  <Text
+                    style={{
+                      color: colors.gray,
+                      fontSize: 15,
+                      marginBottom: 5,
+                      fontWeight: "800"
+                    }}
+                  >
+                    {"Distance"}
+                  </Text>
+                  <Text
+                    style={{
+                      color: colors.black,
+                      fontSize: 20,
+                      marginBottom: 10,
+                      fontWeight: "600"
+                    }}
+                  >
+                    {"20m"}
+                  </Text>
+                </View>
+                <TouchableOpacity
+                  style={{
+                    height: 35,
+                    width: 35,
+                    marginRight: 10,
+                    backgroundColor: colors.blue,
+                    alignSelf: "center",
+                    borderRadius: 17,
+                    justifyContent: "center",
+                    alignItems: "center"
+                  }}
+                >
+                  <Icon name={"phone"} size={17} color="#fff" />
                 </TouchableOpacity>
-              ))}
-          </Animated.ScrollView>
-        )}
+                <TouchableOpacity
+                  style={{
+                    height: 35,
+                    width: 35,
+                    marginRight: 10,
+                    backgroundColor: colors.blue,
+                    alignSelf: "center",
+                    borderRadius: 17,
+                    justifyContent: "center",
+                    alignItems: "center"
+                  }}
+                >
+                  <Icon name={"phone"} size={17} color="#fff" />
+                </TouchableOpacity>
+              </View>
+              <TouchableOpacity
+                onPress={() =>
+                  this.setState(prevState => ({
+                    viewDetails: !prevState.viewDetails
+                  }))}
+                style={{
+                  position: "absolute",
+                  top: 10,
+                  right: 10,
+                  height: 40,
+                  width: 40,
+                  backgroundColor: "transparent",
+                  alignItems: "center",
+                  borderRadius: 20,
+                  justifyContent: "center"
+                }}
+              >
+                <Ionicons name={"ios-close"} size={35} color={"red"} />
+              </TouchableOpacity>
+
+              <View
+                style={{
+                  backgroundColor: "#f0f0f0",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  height: 80
+                }}
+              >
+                <FlatList
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  style={{
+                    alignSelf: "center",
+                    width: "100%",
+                    height: 50,
+                    marginTop: 10,
+                    paddingHorizontal: 10
+                  }}
+                  keyExtractor={item => JSON.stringify(item)}
+                  data={[1, 2, 3, 4, 5, 6, 7, 8]}
+                  renderItem={({ item }) =>
+                    <Image
+                      source={{
+                        uri:
+                          "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSgTDOzadSH7HZlU96Ogy2XzMynwk4o4Epcvw12FmpBYRT0B_aLrA"
+                      }}
+                      borderRadius={8}
+                      style={{
+                        width: 74,
+                        height: 53,
+                        margin: 5
+                      }}
+                    />}
+                />
+              </View>
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  marginHorizontal: 20,
+                  marginTop: 20
+                }}
+              >
+                <Text
+                  style={{
+                    color: colors.black,
+                    fontSize: 12,
+                    marginBottom: 5,
+                    fontWeight: "400"
+                  }}
+                >
+                  {"Tuesday - Saturday"}
+                </Text>
+
+                <Text
+                  style={{
+                    color: colors.black,
+                    fontSize: 12,
+                    marginBottom: 5,
+                    fontWeight: "400"
+                  }}
+                >
+                  {"10:00 - 19:00"}
+                </Text>
+              </View>
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  marginHorizontal: 20,
+                  marginTop: 0
+                }}
+              >
+                <Text
+                  style={{
+                    color: colors.black,
+                    fontSize: 12,
+                    marginBottom: 10,
+                    fontWeight: "400"
+                  }}
+                >
+                  {"Sunday - Monday"}
+                </Text>
+
+                <Text
+                  style={{
+                    color: colors.blue,
+                    fontSize: 12,
+                    marginBottom: 10,
+                    fontWeight: "600"
+                  }}
+                >
+                  {"Closed"}
+                </Text>
+              </View>
+
+              <Button
+                onClick={() => {
+                  this.props.navigation.navigate("Signup");
+                }}
+                textStyle={{ color: "#fff", fontWeight: "bold" }}
+                text="MORE INFO"
+                buttonStyle={{
+                  alignSelf: "center",
+                  backgroundColor: colors.blue,
+                  height: 45,
+                  width: screenWidth - 130,
+                  borderRadius: 50,
+                  justifyContent: "center",
+                  alignItems: "center"
+                }}
+              />
+            </View>
+          : <Animated.ScrollView
+              horizontal
+              scrollEventThrottle={1}
+              showsHorizontalScrollIndicator={false}
+              snapToInterval={CARD_WIDTH}
+              onScroll={Animated.event(
+                [
+                  {
+                    nativeEvent: {
+                      contentOffset: {
+                        x: this.animation
+                      }
+                    }
+                  }
+                ],
+                { useNativeDriver: true }
+              )}
+              style={[styles.scrollView, { alignSelf: "center" }]}
+              contentContainerStyle={styles.endPadding}
+            >
+              {businesses
+                .filter(
+                  i =>
+                    i.address
+                      .toLowerCase()
+                      .indexOf(this.state.search.toLowerCase()) != -1
+                )
+                .map(business =>
+                  <View>
+                    <TouchableOpacity
+                      onPress={() =>
+                        this.setState(prevState => ({
+                          viewDetails: !prevState.viewDetails
+                        }))}
+                      key={JSON.stringify(business)}
+                      style={{
+                        height: 130,
+                        marginVertical: 30,
+                        marginHorizontal: 10,
+                        width: 250,
+                        alignSelf: "center",
+                        borderRadius: 10,
+                        backgroundColor: "#fff"
+                      }}
+                    >
+                      <Image
+                        source={{
+                          uri: business.image
+                        }}
+                        borderRadius={15}
+                        style={{
+                          position: "absolute",
+                          top: -40,
+                          left: 20,
+                          height: 100,
+                          width: 100,
+                          backgroundColor: "#fff",
+                          borderColor: "rgba(0,0,0,0.05)",
+                          borderWidth: 1
+                        }}
+                      />
+                      <View
+                        style={{
+                          justifyContent: "flex-end",
+                          flexDirection: "row",
+                          marginTop: 10,
+                          marginRight: 10
+                        }}
+                      >
+                        <TouchableOpacity
+                          style={{
+                            height: 30,
+                            width: 30,
+                            marginRight: 10,
+                            backgroundColor: colors.blue,
+                            alignSelf: "center",
+                            borderRadius: 15,
+                            justifyContent: "center",
+                            alignItems: "center"
+                          }}
+                        >
+                          <Ionicons
+                            name={"ios-navigate"}
+                            size={17}
+                            color="#fff"
+                          />
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          style={{
+                            height: 30,
+                            width: 30,
+                            marginRight: 10,
+                            backgroundColor: colors.blue,
+                            alignSelf: "center",
+                            borderRadius: 15,
+                            justifyContent: "center",
+                            alignItems: "center"
+                          }}
+                        >
+                          <Icon name={"phone"} size={17} color="#fff" />
+                        </TouchableOpacity>
+                      </View>
+                      <Text
+                        style={{
+                          color: "#000",
+                          fontSize: 20,
+                          fontWeight: "bold",
+                          marginTop: 24,
+                          marginBottom: 3,
+                          marginLeft: 20
+                        }}
+                      >
+                        {business.name}
+                      </Text>
+                      <Text
+                        style={{
+                          color: colors.grey,
+                          fontSize: 13,
+                          marginLeft: 20
+                        }}
+                      >
+                        {business.address}
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                )}
+            </Animated.ScrollView>}
       </View>
     );
   }

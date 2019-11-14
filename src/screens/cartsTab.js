@@ -20,6 +20,7 @@ import {
   screenWidth,
   formatNumber
 } from "../utils/variables";
+
 import { CartItem, addMultipleOrder } from "../components";
 import { addOrder } from "../services/stitch";
 import { Stitch } from "mongodb-stitch-react-native-sdk";
@@ -130,7 +131,7 @@ class Orders extends React.Component {
     const { bags, shops } = this.state;
     return (
       <Subscribe to={[StateContainer]}>
-        {container => (
+        {container =>
           <View style={{ flex: 1 }}>
             <StatusBar backgroundColor="#ffffff" barStyle="dark-content" />
 
@@ -163,110 +164,102 @@ class Orders extends React.Component {
                 style={{ flex: 9, padding: 0 }}
                 showsVerticalScrollIndicator={false}
               >
-                {this.getList(container.getItems()).length === 0 ? (
-                  <View
-                    style={{
-                      alignItems: "center",
-                      justifyContent: "center",
-                      height: 100,
-                      backgroundColor: "#fff",
-                      width: screenWidth - 60,
-                      marginTop: 90,
-                      marginBottom: 30,
-                      alignSelf: "center",
-                      shadowColor: "#000",
-                      shadowOpacity: 0.0,
-                      borderRadius: 12,
-                      elevation: 1,
-                      shadowRadius: 2,
-                      shadowOffset: {
-                        height: 0,
-                        width: 0
-                      }
-                    }}
-                  >
-                    <Text
+                {this.getList(container.getItems()).length === 0
+                  ? <View
                       style={{
-                        color: "#000",
-                        opacity: 1,
-                        fontSize: moderateScale(16, scaleIndice),
-                        fontWeight: "600"
+                        alignItems: "center",
+                        justifyContent: "center",
+                        height: 100,
+                        backgroundColor: "#fff",
+                        width: screenWidth - 60,
+                        marginTop: 90,
+                        marginBottom: 30,
+                        alignSelf: "center"
                       }}
                     >
-                      {"No item in your cart"}
-                    </Text>
-                  </View>
-                ) : (
-                  <FlatList
-                    style={{}}
-                    showsVerticalScrollIndicator={false}
-                    data={this.getList(container.getItems())}
-                    keyExtractor={item => JSON.stringify(item)}
-                    renderItem={({ item, index }) => (
-                      <View
+                      <Text
                         style={{
-                          backgroundColor: "#fff",
-                          width: screenWidth - 60,
-                          marginTop: 10,
-                          paddingTop: 10,
-                          marginBottom: 20,
-                          alignSelf: "center",
-                          shadowColor: "#000",
-                          shadowOpacity: 0.15,
-                          borderRadius: 12,
-                          elevation: 1,
-                          shadowRadius: 4,
-                          shadowOffset: {
-                            height: 2,
-                            width: 0
-                          }
+                          color: "#000",
+                          opacity: 1,
+                          fontSize: moderateScale(16, scaleIndice),
+                          fontWeight: "600"
                         }}
                       >
-                        {item.list.map((item1, index1) => (
-                          <TouchableOpacity
-                            key={JSON.stringify(item1 + index1)}
-                            onLongPress={() => {
-                              Alert.alert(
-                                "Delete shipping address",
-                                "Do you really want remove this address?",
-                                [
-                                  {
-                                    text: "Cancel",
-                                    onPress: () =>
-                                      console.log("Cancel Pressed"),
-                                    style: "cancel"
-                                  },
-                                  {
-                                    text: "Remove",
-                                    onPress: () => {}
-                                  }
-                                ],
-                                { cancelable: false }
-                              );
-                            }}
-                          >
-                            <CartItem
-                              last={
-                                true
-                                //index1 != item.items.length - 1 ? false : true
-                              }
-                              subTitle={item.name}
-                              title={item1.name}
-                              image={{
-                                uri:
-                                  "https://media.4rgos.it/i/Argos/8477116_R_Z001A?w=750&h=440&qlt=70"
+                        {"No item in your cart"}
+                      </Text>
+                    </View>
+                  : <FlatList
+                      style={{}}
+                      showsVerticalScrollIndicator={false}
+                      data={this.getList(container.getItems())}
+                      keyExtractor={item => JSON.stringify(item)}
+                      renderItem={({ item, index }) =>
+                        <View
+                          style={{
+                            backgroundColor: "#fff",
+                            width: screenWidth - 60,
+                            marginTop: 10,
+                            paddingTop: 10,
+                            marginBottom: 20,
+                            alignSelf: "center",
+                            shadowColor: "#000",
+                            shadowOpacity: 0.15,
+                            borderRadius: 12,
+                            elevation: 1,
+                            shadowRadius: 4,
+                            shadowOffset: {
+                              height: 2,
+                              width: 0
+                            }
+                          }}
+                        >
+                          {item.list.map((item1, index1) =>
+                            <TouchableOpacity
+                              key={JSON.stringify(item1 + index1)}
+                              onLongPress={() => {
+                                Alert.alert(
+                                  "Delete shipping address",
+                                  "Do you really want remove this address?",
+                                  [
+                                    {
+                                      text: "Cancel",
+                                      onPress: () =>
+                                        console.log("Cancel Pressed"),
+                                      style: "cancel"
+                                    },
+                                    {
+                                      text: "Remove",
+                                      onPress: () => {}
+                                    }
+                                  ],
+                                  { cancelable: false }
+                                );
                               }}
-                              price={item1.price}
-                              stock={10}
-                              count={1}
-                              updateCount={count => {}}
-                            />
-                          </TouchableOpacity>
-                        ))}
-                      </View>
-                    )}
-                  />
-                )}
+                            >
+                              <CartItem
+                                last={
+                                  true
+                                  //index1 != item.items.length - 1 ? false : true
+                                }
+                                subTitle={item.name}
+                                title={
+                                  item1.name.length <= 17
+                                    ? item1.name
+                                    : item1.name.substring(0, 17) + "..."
+                                }
+                                image={{
+                                  uri:
+                                    "http://archive.warwicka.co.uk/file_store/archive_images/Shop_Logo_1_July120151.jpg"
+                                }}
+                                price={item1.price}
+                                stock={10}
+                                count={1}
+                                updateCount={count => {}}
+                              />
+                            </TouchableOpacity>
+                          )}
+                        </View>}
+                    />}
               </ScrollView>
 
               {/* -------------------------------------------------------------------------- */
@@ -512,8 +505,7 @@ class Orders extends React.Component {
                 </Text>
               </TouchableOpacity>
             </View>
-          </View>
-        )}
+          </View>}
       </Subscribe>
     );
   }

@@ -4,21 +4,90 @@ import {
   Alert,
   Text,
   StatusBar,
-  Platform,
   FlatList,
   TouchableOpacity,
   TextInput,
+  Platform,
   View
 } from "react-native";
+import _ from "lodash";
 import Icon from "react-native-vector-icons/Ionicons";
 import { moderateScale } from "react-native-size-matters";
 import { Subscribe } from "unstated";
 import { StateContainer } from "../utils/stateContainer";
-import { scaleIndice, screenWidth, formatNumber } from "../utils/variables";
-import { CartItem } from "../components";
-
+import {
+  STATUS_BAR_HEIGHT,
+  scaleIndice,
+  screenWidth,
+  formatNumber
+} from "../utils/variables";
+import { CartItem, addMultipleOrder } from "../components";
+import { addOrder } from "../services/stitch";
+import { Stitch } from "mongodb-stitch-react-native-sdk";
 const mystates = new StateContainer();
 
+let datas = [
+  {
+    cretedAt: 16,
+    currency: "usd",
+    delivery_time: "10 - 20 mins",
+    image:
+      "https://thumbor.forbes.com/thumbor/960x0/https%3A%2F%2Fblogs-images.forbes.com%2Fgordonkelly%2Ffiles%2F2019%2F07%2FScreenshot-2019-07-15-at-02.32.05.jpg",
+    name: 'TETS-4916.A - LED 50" WESTPOINT PC IN HDMI',
+    price: 375,
+    product_by: "Tecno",
+    shop: "Valerio Canez S.A.",
+    stock: 2
+  },
+  {
+    cretedAt: 10,
+    currency: "usd",
+    delivery_time: "10 - 20 mins",
+    image:
+      "https://thumbor.forbes.com/thumbor/960x0/https%3A%2F%2Fblogs-images.forbes.com%2Fgordonkelly%2Ffiles%2F2019%2F07%2FScreenshot-2019-07-15-at-02.32.05.jpg",
+    name: "kdftu",
+    price: 88,
+    product_by: "Tecno",
+    shop: "Valerio Canez S.A.",
+    stock: 5
+  },
+  {
+    cretedAt: 94,
+    currency: "usd",
+    delivery_time: "10 - 20 mins",
+    image:
+      "https://thumbor.forbes.com/thumbor/960x0/https%3A%2F%2Fblogs-images.forbes.com%2Fgordonkelly%2Ffiles%2F2019%2F07%2FScreenshot-2019-07-15-at-02.32.05.jpg",
+    name: "GVS04BDWSS - 4cuft Wine Cooler General Electric",
+    price: 550,
+    product_by: "Tecno",
+    shop: "Valerio Canez S.A.",
+    stock: 3
+  },
+  {
+    cretedAt: 49,
+    currency: "htg",
+    delivery_time: "10 - 20 mins",
+    image:
+      "https://thumbor.forbes.com/thumbor/960x0/https%3A%2F%2Fblogs-images.forbes.com%2Fgordonkelly%2Ffiles%2F2019%2F07%2FScreenshot-2019-07-15-at-02.32.05.jpg",
+    name: "LZ1705D - SOFA BED RED WITH BLUETOOTH METAL LEG",
+    price: 2403,
+    product_by: "Tecno",
+    shop: "Thomson",
+    stock: 200
+  },
+  {
+    cretedAt: 93,
+    currency: "usd",
+    delivery_time: "10 - 20 mins",
+    image:
+      "https://thumbor.forbes.com/thumbor/960x0/https%3A%2F%2Fblogs-images.forbes.com%2Fgordonkelly%2Ffiles%2F2019%2F07%2FScreenshot-2019-07-15-at-02.32.05.jpg",
+    name: "K12UM - SDMO/KOHLER 12KW SILENT GENERATOR",
+    price: 10000,
+    product_by: "Tecno",
+    shop: "Thomson",
+    stock: 5
+  }
+];
 class Orders extends React.Component {
   static navigationOptions = ({ navigation }) => {
     return {
@@ -53,153 +122,148 @@ class Orders extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      bags: [
-        {
-          shop: "Thomson Electronics",
-          items: [
-            { price: 238.5, name: "TV 32' android" },
-            { price: 249.3, name: "TV 32' android" }
-          ]
-        },
-        { shop: "ABC", items: [{ price: 33.5, name: "Usb 64 GB Toshiba" }] },
-        {
-          shop: "PC Express",
-          items: [
-            { price: 238.5, name: "TV 32' android" },
-            { price: 249.3, name: "TV 32' android" },
-            { price: 249.3, name: "TV 32' android" },
-            { price: 249.3, name: "TV 32' android" }
-          ]
-        }
-      ]
+      bags: [],
+      shops: []
     };
-    console.log(mystates.state);
+
+    //alert(mystates.state.getItems().length);
+    console.log(mystates);
   }
 
+  componentDidMount() {
+    for (let [key, value] of Object.entries(this.state.bags)) {
+      //console.log(`name:'${key}', list: ${JSON.stringify(value)}`);
+      this.state.shops.push({ name: `${key}`, list: value });
+    }
+    console.log(this.state.shops);
+    this.setState({ shops: this.state.shops });
+  }
+
+  getList = list => {
+    let arr = [];
+    for (let [key, value] of Object.entries(
+      _.groupBy(list, item => item.shop)
+    )) {
+      //console.log(`name:'${key}', list: ${JSON.stringify(value)}`);
+      arr.push({ name: `${key}`, list: value });
+    }
+
+    return arr;
+  };
   // Render any loading content that you like here
   render() {
-    const { bags } = this.state;
+    const { bags, shops } = this.state;
     return (
-      <Subscribe to={[new StateContainer()]}>
-        {states => (
+      <Subscribe to={[StateContainer]}>
+        {container =>
           <View style={{ flex: 1 }}>
             <StatusBar backgroundColor="#ffffff" barStyle="dark-content" />
+
+            {/* -------------------------------------------------------------------------- */
+            /*                                   header                                   */
+            /* -------------------------------------------------------------------------- */}
 
             <View style={{ flex: 1 }}>
               <ScrollView
                 style={{ flex: 9, padding: 0 }}
                 showsVerticalScrollIndicator={false}
               >
-                {0 === 1 ? (
-                  <View
-                    style={{
-                      alignItems: "center",
-                      justifyContent: "center",
-                      height: 100,
-                      backgroundColor: "#fff",
-                      width: screenWidth - 60,
-                      marginTop: 90,
-                      marginBottom: 30,
-                      alignSelf: "center",
-                      shadowColor: "#000",
-                      shadowOpacity: 0.15,
-                      borderRadius: 12,
-                      elevation: 1,
-                      shadowRadius: 2,
-                      shadowOffset: {
-                        height: 2,
-                        width: 0
-                      }
-                    }}
-                  >
-                    <Text
+                {this.getList(container.getItems()).length === 0
+                  ? <View
                       style={{
-                        color: "#000",
-                        opacity: 1,
-                        fontSize: moderateScale(16, scaleIndice),
-                        fontWeight: "600"
-                      }}
-                    >
-                      {"No item in your cart"}
-                    </Text>
-                  </View>
-                ) : null}
-
-                {/* -------------------------------------------------------------------------- */
-                /*                                 Item's list                                */
-                /* -------------------------------------------------------------------------- */}
-
-                <Text> {states.state.items.length}</Text>
-                {states.state.items.map(i => (
-                  <Text>{i}</Text>
-                ))}
-                <FlatList
-                  style={{}}
-                  showsVerticalScrollIndicator={false}
-                  data={bags}
-                  keyExtractor={item => JSON.stringify(item)}
-                  renderItem={({ item }) => (
-                    <View
-                      style={{
+                        alignItems: "center",
+                        justifyContent: "center",
+                        height: 100,
                         backgroundColor: "#fff",
                         width: screenWidth - 60,
-                        marginTop: 10,
-                        paddingTop: 10,
-                        marginBottom: 20,
-                        alignSelf: "center",
-                        shadowColor: "#000",
-                        shadowOpacity: 0.15,
-                        borderRadius: 12,
-                        elevation: 1,
-                        shadowRadius: 4,
-                        shadowOffset: {
-                          height: 2,
-                          width: 0
-                        }
+                        marginTop: 90,
+                        marginBottom: 30,
+                        alignSelf: "center"
                       }}
                     >
-                      {item.items.map((item1, index1) => (
-                        <TouchableOpacity
-                          key={JSON.stringify(item1 + index1)}
-                          onLongPress={() => {
-                            Alert.alert(
-                              "Delete shipping address",
-                              "Do you really want remove this address?",
-                              [
-                                {
-                                  text: "Cancel",
-                                  onPress: () => console.log("Cancel Pressed"),
-                                  style: "cancel"
-                                },
-                                {
-                                  text: "Remove",
-                                  onPress: () => {}
-                                }
-                              ],
-                              { cancelable: false }
-                            );
+                      <Text
+                        style={{
+                          color: "#000",
+                          opacity: 1,
+                          fontSize: moderateScale(16, scaleIndice),
+                          fontWeight: "600"
+                        }}
+                      >
+                        {"No item in your cart"}
+                      </Text>
+                    </View>
+                  : <FlatList
+                      style={{}}
+                      showsVerticalScrollIndicator={false}
+                      data={this.getList(container.getItems())}
+                      keyExtractor={item => JSON.stringify(item)}
+                      renderItem={({ item, index }) =>
+                        <View
+                          style={{
+                            backgroundColor: "#fff",
+                            width: screenWidth - 30,
+                            marginTop: 10,
+                            paddingTop: 10,
+                            marginBottom: 20,
+                            alignSelf: "center",
+                            shadowColor: "#000",
+                            shadowOpacity: 0.15,
+                            borderRadius: 12,
+                            elevation: 1,
+                            shadowRadius: 4,
+                            shadowOffset: {
+                              height: 2,
+                              width: 0
+                            }
                           }}
                         >
-                          <CartItem
-                            last={
-                              index1 != item.items.length - 1 ? false : true
-                            }
-                            subTitle={item.shop}
-                            title={item1.name}
-                            image={{
-                              uri:
-                                "https://media.4rgos.it/i/Argos/8477116_R_Z001A?w=750&h=440&qlt=70"
-                            }}
-                            price={item1.price}
-                            stock={10}
-                            count={1}
-                            updateCount={() => {}}
-                          />
-                        </TouchableOpacity>
-                      ))}
-                    </View>
-                  )}
-                />
+                          {item.list.map((item1, index1) =>
+                            <TouchableOpacity
+                              key={JSON.stringify(item1 + index1)}
+                              onLongPress={() => {
+                                Alert.alert(
+                                  "Delete shipping address",
+                                  "Do you really want remove this address?",
+                                  [
+                                    {
+                                      text: "Cancel",
+                                      onPress: () =>
+                                        console.log("Cancel Pressed"),
+                                      style: "cancel"
+                                    },
+                                    {
+                                      text: "Remove",
+                                      onPress: () => {}
+                                    }
+                                  ],
+                                  { cancelable: false }
+                                );
+                              }}
+                            >
+                              <CartItem
+                                last={
+                                  true
+                                  //index1 != item.items.length - 1 ? false : true
+                                }
+                                subTitle={item.name}
+                                title={
+                                  item1.name.length <= 17
+                                    ? item1.name
+                                    : item1.name.substring(0, 17) + "..."
+                                }
+                                image={{
+                                  uri:
+                                    "http://archive.warwicka.co.uk/file_store/archive_images/Shop_Logo_1_July120151.jpg"
+                                }}
+                                price={item1.price}
+                                stock={10}
+                                count={1}
+                                updateCount={count => {}}
+                              />
+                            </TouchableOpacity>
+                          )}
+                        </View>}
+                    />}
               </ScrollView>
 
               {/* -------------------------------------------------------------------------- */
@@ -316,7 +380,7 @@ class Orders extends React.Component {
                       alignSelf: "flex-end"
                     }}
                   >
-                    {formatNumber(53)}
+                    {formatNumber(container.getItemsTotal())}
                   </Text>
                 </View>
               </View>
@@ -366,7 +430,7 @@ class Orders extends React.Component {
                       alignSelf: "flex-end"
                     }}
                   >
-                    {formatNumber(344)}
+                    {formatNumber(0)}
                   </Text>
                 </View>
               </View>
@@ -416,7 +480,7 @@ class Orders extends React.Component {
                       alignSelf: "flex-end"
                     }}
                   >
-                    {formatNumber(2323)}
+                    {formatNumber(container.getItemsTotal())}
                   </Text>
                 </View>
               </View>
@@ -445,8 +509,7 @@ class Orders extends React.Component {
                 </Text>
               </TouchableOpacity>
             </View>
-          </View>
-        )}
+          </View>}
       </Subscribe>
     );
   }

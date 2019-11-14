@@ -86,7 +86,7 @@ class Details extends React.Component {
     const { product } = this.state;
     return (
       <Subscribe to={[StateContainer]}>
-        {container => (
+        {container =>
           <View style={{ flex: 1, paddingBottom: 20 }}>
             <StatusBar backgroundColor="blue" barStyle="dark-content" />
 
@@ -162,7 +162,7 @@ class Details extends React.Component {
                     width: moderateScale(30, scaleIndice)
                   }}
                   onPress={() => {}}
-                ></TouchableOpacity>
+                />
                 <TouchableOpacity
                   style={{
                     height: moderateScale(30, scaleIndice),
@@ -268,7 +268,7 @@ class Details extends React.Component {
                     width: moderateScale(30, scaleIndice)
                   }}
                   onPress={() => {}}
-                ></TouchableOpacity>
+                />
                 <TouchableOpacity
                   style={{
                     height: moderateScale(30, scaleIndice),
@@ -457,7 +457,7 @@ class Details extends React.Component {
                 style={{
                   alignSelf: "center",
                   justifyContent: "center",
-                  paddingTop: moderateScale(0, scaleIndice),
+                  paddingTop: moderateScale(30, scaleIndice),
                   width: screenWidth
                 }}
               >
@@ -1035,8 +1035,7 @@ class Details extends React.Component {
                 </TouchableOpacity>
               </View>
             </Modal>
-          </View>
-        )}
+          </View>}
       </Subscribe>
     );
   }
@@ -1136,7 +1135,7 @@ class SliderRadius extends React.Component {
           }}
           loop={false}
         >
-          {data.map(item => (
+          {data.map(item =>
             <ImageBackground
               key={JSON.stringify(item)}
               source={{ uri: item.url }}
@@ -1182,7 +1181,7 @@ class SliderRadius extends React.Component {
                 </Text>
               </View>
             </ImageBackground>
-          ))}
+          )}
         </Swiper>
       </Animated.View>
     );

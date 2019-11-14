@@ -8,6 +8,7 @@ import {
   Text,
   StatusBar,
   TouchableOpacity,
+  TouchableHighlight,
   ImageBackground,
   ActivityIndicator,
   View
@@ -52,10 +53,18 @@ class Shop extends React.Component {
       });
     }
     setTimeout(() => {
-      this.setState({
+      // this.state.business.categories.forEach(element => {
+      //   this.state.categories.push({
+      //     title: element.title
+      //   });
+      //   this.setState(prev => ({
+      //     categories: prev.categories
+      //   }));
+      // });
+      this.setState(prev => ({
         categories: this.state.business.categories
-      });
-    }, 100);
+      }));
+    }, 200);
   };
 
   componentDidMount() {
@@ -213,8 +222,8 @@ class Shop extends React.Component {
               onPress={() => this.props.navigation.navigate("Carts")}
             >
               <Icon
-                name="bag"
-                size={moderateScale(18, scaleIndice)}
+                name="shopping"
+                size={moderateScale(15, scaleIndice)}
                 color={colors.blue}
               />
             </TouchableOpacity>
@@ -325,8 +334,8 @@ class Shop extends React.Component {
               onPress={() => this.props.navigation.navigate("Carts")}
             >
               <Icon
-                name="bag"
-                size={moderateScale(18, scaleIndice)}
+                name="shopping"
+                size={moderateScale(15, scaleIndice)}
                 color={colors.blue}
               />
             </TouchableOpacity>
@@ -351,11 +360,10 @@ class Shop extends React.Component {
           /* -------------------------------------------------------------------------- */}
 
           <ImageBackground
-            source={{ uri: business.image }}
+            source={business.image}
             style={{
               width: screenWidth,
-              zIndex: 0,
-              height: 260
+              zIndex: 0
             }}
           >
             <View
@@ -368,7 +376,7 @@ class Shop extends React.Component {
               <View
                 style={{
                   marginTop: 100,
-                  marginBottom: 30,
+                  marginBottom: -3,
                   width: moderateScale(300, scaleIndice),
                   height: moderateScale(160, scaleIndice),
                   backgroundColor: "#fff",
@@ -379,7 +387,7 @@ class Shop extends React.Component {
                 }}
               >
                 <ImageBackground
-                  source={{ uri: business.image }}
+                  source={business.image}
                   borderRadius={moderateScale(40, scaleIndice)}
                   style={{
                     marginTop: -40,
@@ -425,14 +433,16 @@ class Shop extends React.Component {
                     </Text>
                   </View>
                   <View style={styles.tagBlock}>
-                    <Text style={styles.tagText}>{business.delivery_time}</Text>
+                    <Text style={styles.tagText}>
+                      {business.delivery_time}
+                    </Text>
                   </View>
 
-                  {business.free_delivery ? (
-                    <View style={styles.tagBlock}>
-                      <Text style={styles.tagText}>Free delivery</Text>
-                    </View>
-                  ) : null}
+                  {business.free_delivery
+                    ? <View style={styles.tagBlock}>
+                        <Text style={styles.tagText}>Free delivery</Text>
+                      </View>
+                    : null}
                 </View>
                 <View
                   style={{
@@ -505,7 +515,7 @@ class Shop extends React.Component {
                         fontWeight: selected === index ? "600" : "100"
                       }}
                     >
-                      {item.title.length <= 12
+                      {item.title.length <= 15
                         ? item.title
                         : item.title.substring(0, 12) + "..."}
                     </Text>
@@ -526,6 +536,7 @@ class Shop extends React.Component {
                 alignSelf: "center",
                 marginVertical: 5,
                 marginBottom: 15,
+                marginTop: -3,
                 height: moderateScale(8, scaleIndice),
                 width: moderateScale(8, scaleIndice),
                 borderRadius: moderateScale(4, scaleIndice),
@@ -533,98 +544,20 @@ class Shop extends React.Component {
               }}
             />
 
-            {selected > 0 ? (
-              <FlatList
-                style={{
-                  backgroundColor: "#fff",
-                  alignSelf: "center"
-                }}
-                data={products.sort((a, b) => {
-                  return a.cretedAt - b.cretedAt;
-                })}
-                numColumns={2}
-                keyExtractor={item => JSON.stringify(item)}
-                renderItem={({ item, index }) => (
-                  <TouchableOpacity
-                    onPress={() => {
-                      this.props.navigation.navigate("Details", {
-                        product: item
-                      });
-                    }}
-                  >
-                    <CardItem
-                      height_={220}
-                      image={{ uri: item.image }}
-                      backgroundColor="#596b9f"
-                      title={item.name}
-                      subTitle={item.product_by}
-                      showPrice
-                      price={`${item.price} ${item.currency}`}
-                      deliveryTime={item.delivery_time}
-                    />
-                  </TouchableOpacity>
-                )}
-              />
-            ) : (
-              <View style={{ flex: 1 }}>
-                <View
-                  style={{
-                    flexDirection: "row",
-                    paddingHorizontal: 15,
-                    justifyContent: "space-between",
-                    alignItems: "center",
-
-                    marginBottom: 10
-                  }}
-                >
-                  <Text
-                    style={{
-                      color: "#4A4A4A",
-                      fontSize: 21,
-                      fontWeight: "500"
-                    }}
-                  >
-                    {"Best Electronics"}
-                  </Text>
-                  <TouchableOpacity
-                    onPress={() =>
-                      this.props.navigation.navigate("AllProducts", {
-                        backScreen: "Explorer"
-                      })
-                    }
-                  >
-                    <Text
-                      style={{
-                        color: "#980100",
-                        fontSize: 12,
-                        fontWeight: "500"
-                      }}
-                    >
-                      {"View All"}
-                    </Text>
-                  </TouchableOpacity>
-                </View>
-                {products.length == 0 && load == false ? (
-                  <ActivityIndicator style={{ marginTop: 10 }} />
-                ) : null}
-                <FlatList
+            {selected > 0
+              ? <FlatList
                   style={{
                     backgroundColor: "#fff",
                     alignSelf: "center",
-                    paddingHorizontal: moderateScale(10, scaleIndice),
-                    width: screenWidth
+                    width: screenWidth - 20
                   }}
-                  showsHorizontalScrollIndicator={false}
                   data={products.sort((a, b) => {
                     return a.cretedAt - b.cretedAt;
                   })}
-                  horizontal
+                  numColumns={2}
                   keyExtractor={item => JSON.stringify(item)}
-                  renderItem={({ item, index }) => (
+                  renderItem={({ item, index }) =>
                     <TouchableOpacity
-                      style={{
-                        marginRight: index === products.length - 1 ? 20 : 0
-                      }}
                       onPress={() => {
                         this.props.navigation.navigate("Details", {
                           product: item
@@ -635,106 +568,184 @@ class Shop extends React.Component {
                         height_={220}
                         image={{ uri: item.image }}
                         backgroundColor="#596b9f"
-                        title={
-                          item.name.length <= 17
-                            ? item.name
-                            : item.name.substring(0, 17) + "..."
-                        }
+                        title={item.name}
                         subTitle={item.product_by}
                         showPrice
-                        price={`${item.price} ${item.currency.toUpperCase()}`}
+                        price={`${item.price} ${item.currency}`}
                         deliveryTime={item.delivery_time}
                       />
-                    </TouchableOpacity>
-                  )}
+                    </TouchableOpacity>}
                 />
-
-                {/* -------------------------------------------------------------------------- */
-                /*                                  Trending                                  */
-                /* -------------------------------------------------------------------------- */}
-                <View
-                  style={{
-                    flexDirection: "row",
-                    paddingHorizontal: 20,
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    marginTop: 20,
-                    marginBottom: 10
-                  }}
-                >
-                  <Text
+              : <View style={{ flex: 1 }}>
+                  <View
                     style={{
-                      color: "#4A4A4A",
-                      fontSize: 21,
-                      fontWeight: "500"
+                      flexDirection: "row",
+                      paddingHorizontal: 15,
+                      justifyContent: "space-between",
+                      alignItems: "center",
+
+                      marginBottom: 10
                     }}
-                  >
-                    {"Trending"}
-                  </Text>
-                  <TouchableOpacity
-                    onPress={() =>
-                      this.props.navigation.navigate("Trending", {
-                        backScreen: "Explorer"
-                      })
-                    }
                   >
                     <Text
                       style={{
-                        color: "#980100",
-                        fontSize: 12,
+                        color: "#4A4A4A",
+                        fontSize: 21,
                         fontWeight: "500"
                       }}
                     >
-                      {"View All"}
+                      {"Best Electronics"}
                     </Text>
-                  </TouchableOpacity>
-                </View>
-                {products.length == 0 && load == false ? (
-                  <ActivityIndicator style={{ marginTop: 10 }} />
-                ) : null}
-                <FlatList
-                  style={{
-                    backgroundColor: "#fff",
-                    alignSelf: "center",
-                    paddingHorizontal: moderateScale(15, scaleIndice),
-                    width: screenWidth
-                  }}
-                  showsHorizontalScrollIndicator={false}
-                  data={products.sort((a, b) => {
-                    return a.cretedAt - b.cretedAt;
-                  })}
-                  horizontal
-                  keyExtractor={item => JSON.stringify(item)}
-                  renderItem={({ item, index }) => (
                     <TouchableOpacity
+                      onPress={() =>
+                        this.props.navigation.navigate("AllProducts", {
+                          backScreen: "Explorer",
+                          pageText: "Best sellers"
+                        })}
+                    >
+                      <Text
+                        style={{
+                          color: "#980100",
+                          fontSize: 12,
+                          fontWeight: "500"
+                        }}
+                      >
+                        {"View All"}
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                  {products.length == 0 && load == false
+                    ? <ActivityIndicator style={{ marginTop: 10 }} />
+                    : null}
+                  <FlatList
+                    style={{
+                      backgroundColor: "#fff",
+                      alignSelf: "center",
+                      paddingHorizontal: moderateScale(10, scaleIndice),
+                      width: screenWidth
+                    }}
+                    showsHorizontalScrollIndicator={false}
+                    data={products.sort((a, b) => {
+                      return a.cretedAt - b.cretedAt;
+                    })}
+                    horizontal
+                    keyExtractor={item => JSON.stringify(item)}
+                    renderItem={({ item, index }) =>
+                      <TouchableHighlight
+                        underlayColor={"#f9f9f9"}
+                        style={{
+                          borderRadius: 10,
+                          marginRight: index === products.length - 1 ? 20 : 0
+                        }}
+                        onPress={() => {
+                          this.props.navigation.navigate("Details", {
+                            product: item
+                          });
+                        }}
+                      >
+                        <CardItem
+                          height_={220}
+                          image={{ uri: item.image }}
+                          backgroundColor="#596b9f"
+                          title={
+                            item.name.length <= 17
+                              ? item.name
+                              : item.name.substring(0, 17) + "..."
+                          }
+                          subTitle={item.product_by}
+                          showPrice
+                          price={`${item.price} ${item.currency.toUpperCase()}`}
+                          deliveryTime={item.delivery_time}
+                        />
+                      </TouchableHighlight>}
+                  />
+
+                  {/* -------------------------------------------------------------------------- */
+                  /*                                  Trending                                  */
+                  /* -------------------------------------------------------------------------- */}
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      paddingHorizontal: 20,
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      marginTop: 20,
+                      marginBottom: 10
+                    }}
+                  >
+                    <Text
                       style={{
-                        marginRight: index === products.length - 1 ? 20 : 0
-                      }}
-                      onPress={() => {
-                        this.props.navigation.navigate("Details", {
-                          product: item
-                        });
+                        color: "#4A4A4A",
+                        fontSize: 21,
+                        fontWeight: "500"
                       }}
                     >
-                      <CardItem
-                        height_={220}
-                        image={{ uri: item.image }}
-                        backgroundColor="#596b9f"
-                        title={
-                          item.name.length <= 17
-                            ? item.name
-                            : item.name.substring(0, 17) + "..."
-                        }
-                        subTitle={item.product_by}
-                        showPrice
-                        price={`${item.price} ${item.currency.toUpperCase()}`}
-                        deliveryTime={item.delivery_time}
-                      />
+                      {"Trending"}
+                    </Text>
+                    <TouchableOpacity
+                      onPress={() =>
+                        this.props.navigation.navigate("AllProducts", {
+                          backScreen: "Explorer",
+                          pageText: "Trending"
+                        })}
+                    >
+                      <Text
+                        style={{
+                          color: "#980100",
+                          fontSize: 12,
+                          fontWeight: "500"
+                        }}
+                      >
+                        {"View All"}
+                      </Text>
                     </TouchableOpacity>
-                  )}
-                />
-              </View>
-            )}
+                  </View>
+                  {products.length == 0 && load == false
+                    ? <ActivityIndicator style={{ marginTop: 10 }} />
+                    : null}
+                  <FlatList
+                    style={{
+                      backgroundColor: "#fff",
+                      alignSelf: "center",
+                      paddingHorizontal: moderateScale(15, scaleIndice),
+                      width: screenWidth
+                    }}
+                    showsHorizontalScrollIndicator={false}
+                    data={products.sort((a, b) => {
+                      return a.cretedAt - b.cretedAt;
+                    })}
+                    horizontal
+                    keyExtractor={item => JSON.stringify(item)}
+                    renderItem={({ item, index }) =>
+                      <TouchableHighlight
+                        underlayColor={"#f9f9f9"}
+                        style={{
+                          borderRadius: 10,
+                          marginRight: index === products.length - 1 ? 20 : 0
+                        }}
+                        onPress={() => {
+                          this.props.navigation.navigate("Details", {
+                            product: item
+                          });
+                        }}
+                      >
+                        <CardItem
+                          height_={220}
+                          image={{ uri: item.image }}
+                          backgroundColor="#596b9f"
+                          title={
+                            item.name.length <= 17
+                              ? item.name
+                              : item.name.substring(0, 17) + "..."
+                          }
+                          subTitle={item.product_by}
+                          showPrice
+                          price={`${item.price} ${item.currency.toUpperCase()}`}
+                          deliveryTime={item.delivery_time}
+                        />
+                      </TouchableHighlight>}
+                  />
+                </View>}
           </View>
         </ScrollView>
       </View>

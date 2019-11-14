@@ -4,7 +4,10 @@ class StateContainer extends Container {
   state = {
     items: [],
     goToCarts: false,
-    orders: []
+    orders: [],
+    addresses: [],
+    cards: [],
+    selectAddress: {}
   };
 
   addItem = item => {
@@ -13,9 +16,34 @@ class StateContainer extends Container {
       items: prevState.items
     }));
   };
+  addAddress = address => {
+    if (this.state.addresses.filter(i => i.addNew == true) == 0) {
+      this.state.addresses.push({
+        addNew: true
+      });
+    }
+    this.state.addresses.unshift(address);
+    this.setState(
+      {
+        addresses: this.state.addresses
+      },
+      () => {}
+    );
+  };
+  addSelectAddress = selectAddress => {
+    this.setState({
+      selectAddress
+    });
+  };
 
   getItems = () => {
     return this.state.items;
+  };
+  getAddresses = () => {
+    return this.state.addresses;
+  };
+  getSelectAddress = () => {
+    return this.state.selectAddress;
   };
 
   getItemsTotal = () => {

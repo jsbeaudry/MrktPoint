@@ -6,6 +6,7 @@ import {
   TextInput,
   StatusBar,
   View,
+  ActivityIndicator,
   FlatList,
   Platform
 } from "react-native";
@@ -32,7 +33,9 @@ export default class Tab1 extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      products: []
+      products: [],
+      load: false,
+      pageText: this.props.navigation.getParam("pageText", "")
     };
   }
 
@@ -58,11 +61,14 @@ export default class Tab1 extends Component {
             "https://thumbor.forbes.com/thumbor/960x0/https%3A%2F%2Fblogs-images.forbes.com%2Fgordonkelly%2Ffiles%2F2019%2F07%2FScreenshot-2019-07-15-at-02.32.05.jpg"
         });
       }
-      this.setState(prevState => ({ products: prevState.products }));
+      this.setState(prevState => ({
+        products: prevState.products,
+        load: true
+      }));
     });
   }
   render() {
-    const { products } = this.state;
+    const { products, pageText, load } = this.state;
     return (
       <View style={{ flex: 1 }}>
         <StatusBar backgroundColor="#fff" barStyle="dark-content" />
@@ -72,7 +78,7 @@ export default class Tab1 extends Component {
             style={{
               width: moderateScale(200, scaleIndice),
               marginTop: 100,
-              marginLeft: moderateScale(10, scaleIndice),
+              marginLeft: moderateScale(13, scaleIndice),
               color: "#000",
               fontWeight: "600",
               fontSize: moderateScale(25, scaleIndice),
@@ -80,7 +86,7 @@ export default class Tab1 extends Component {
               alignSelf: "flex-start"
             }}
           >
-            {"Best sellers"}
+            {pageText}
           </Text>
 
           <View
@@ -90,6 +96,9 @@ export default class Tab1 extends Component {
               flex: 1
             }}
           >
+            {products.length == 0 && load == false ? (
+              <ActivityIndicator style={{ marginTop: 100 }} />
+            ) : null}
             <FlatList
               style={{
                 backgroundColor: "#fff",

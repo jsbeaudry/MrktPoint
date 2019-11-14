@@ -104,7 +104,8 @@ export default class CardItem extends Component {
             <Text
               style={{
                 color: "#272727",
-                fontSize: moderateScale(12, scaleIndice),
+                marginTop: -5,
+                fontSize: moderateScale(13, scaleIndice),
                 fontWeight: "700",
                 lineHeight: moderateScale(13, scaleIndice)
               }}
