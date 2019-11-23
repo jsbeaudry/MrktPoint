@@ -86,7 +86,7 @@ class Shop extends React.Component {
             product_by: "Tecno",
             price: element.price ? element.price : 0.0,
             stock: element.quantity,
-            currency: element.currency,
+            currency: element.currency ? element.currency.toUpperCase() : "HTG",
             delivery_time: "10 - 20 mins",
             cretedAt: Math.floor(Math.random() * 100) + 1,
             shop: this.state.business.name,

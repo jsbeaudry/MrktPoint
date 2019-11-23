@@ -2,11 +2,14 @@ import React from "react";
 import {
   StyleSheet,
   Platform,
+  Button,
   Text,
   Image,
   StatusBar,
+  ScrollView,
   TouchableOpacity,
   TextInput,
+  ActivityIndicator,
   View,
   KeyboardAvoidingView,
   DatePickerIOS,
@@ -18,7 +21,20 @@ import Constants from "expo-constants";
 import { colors } from "../utils/colors";
 import * as ImagePicker from "expo-image-picker";
 import * as Permissions from "expo-permissions";
-import { bold } from "ansi-colors";
+import { Formik } from "formik";
+import * as yup from "yup";
+import DateTimePicker from "react-native-modal-datetime-picker";
+import ModalPicker from "react-native-modal-picker";
+import { Stitch, BSON } from "mongodb-stitch-react-native-sdk";
+import { updateUser, getOne } from "../services";
+
+const validationSchema = yup.object().shape({
+  firstname: yup.string().required().label("firstname"),
+  lastname: yup.string().required().label("lastname"),
+  email: yup.string().required().email().label("email"),
+  phone: yup.string().required().label("phone")
+});
+
 class AddCard extends React.Component {
   static navigationOptions = ({ navigation }) => {
     return {
@@ -55,27 +71,56 @@ class AddCard extends React.Component {
     super(props);
     this.state = {
       birthdate: new Date(),
-      showDate: false,
       image: null,
-      fullname: "",
-      email: "",
-      phone: "",
-      gender: ""
+      gender: "",
+      user: {},
+      isDateTimePickerVisible: false
     };
-
-    this.setDate = this.setDate.bind(this);
   }
   componentWillMount() {
     this.getPermissionAsync();
+    let data_ = Stitch.defaultAppClient.auth.activeUserAuthInfo;
+    if (
+      Stitch.defaultAppClient.auth.activeUserAuthInfo &&
+      Stitch.defaultAppClient.auth.activeUserAuthInfo.userId != undefined
+    ) {
+      getOne("users", { user_id: data_.userId })
+        .then(results => {
+          console.log(results);
+
+          this.setState(
+            {
+              user: results[0],
+              birthdate: results[0].birthdate
+                ? results[0].birthdate
+                : new Date(),
+              image: results[0].image ? results[0].image : ""
+            },
+            () => {
+              //alert(JSON.stringify(this.state.user));
+            }
+          );
+        })
+        .catch(error => {
+          console.log(error);
+        });
+    }
   }
 
-  showDate = () => {
-    this.setState({ showDate: !this.state.showDate });
+  showDateTimePicker = () => {
+    this.setState({ isDateTimePickerVisible: true });
   };
 
-  setDate(newDate) {
-    this.setState({ birthdate: newDate });
-  }
+  hideDateTimePicker = () => {
+    this.setState({ isDateTimePickerVisible: false });
+  };
+
+  handleDatePicked = date => {
+    console.log("A date has been picked: ", date);
+    this.setState({ birthdate: date });
+    this.hideDateTimePicker();
+  };
+
   getPermissionAsync = async () => {
     if (Constants.platform.ios) {
       const { status } = await Permissions.askAsync(Permissions.CAMERA_ROLL);
@@ -87,15 +132,16 @@ class AddCard extends React.Component {
 
   _pickImage = async () => {
     let result = await ImagePicker.launchImageLibraryAsync({
+      base64: true,
       mediaTypes: ImagePicker.MediaTypeOptions.All,
       allowsEditing: true,
       aspect: [4, 3]
     });
 
-    console.log(result);
+    //console.log(result.uri);
 
     if (!result.cancelled) {
-      this.setState({ image: result.uri });
+      this.setState({ image: result });
     }
   };
 
@@ -114,21 +160,21 @@ class AddCard extends React.Component {
     }
   };
   render() {
-    const {
-      showDate,
-      image,
-      fullname,
-      email,
-      phone,
-      gender,
-      birthdate
-    } = this.state;
+    const { image, gender, birthdate, user } = this.state;
+    let index = 0;
+    const data = [
+      // { key: index++, section: true, label: "Fruits" },
+      { key: index++, label: "Male" },
+      { key: index++, label: "Female" }
+    ];
     return (
-      <View style={{ flex: 1, backgroundColor: "#fff", paddingTop: 100 }}>
+      <ScrollView style={{ flex: 1, backgroundColor: "#fff" }}>
         <StatusBar backgroundColor="#fff" barStyle="dark-content" />
         <KeyboardAvoidingView style={{}} behavior="padding" enabled>
           <View
             style={{
+              paddingTop: 100,
+              height: screenHeight,
               backgroundColor: "#fff",
               shadowColor: "#000",
               shadowOpacity: 0.1,
@@ -165,7 +211,7 @@ class AddCard extends React.Component {
               <Image
                 source={{
                   uri: image
-                    ? image
+                    ? `data:image/jpg;base64,${image.base64}`
                     : "https://www.leisureopportunities.co.uk/images/995586_746594.jpg"
                 }}
                 borderRadius={142 / 2}
@@ -192,249 +238,404 @@ class AddCard extends React.Component {
                 <Icon name={"ios-camera"} size={30} color="#fff" />
               </TouchableOpacity>
             </View>
-            <View
-              style={{
-                marginTop: 40,
-                marginVertical: 10,
-                marginHorizontal: 20,
-                flexDirection: "row",
-                borderBottomWidth: 1,
-                borderBottomColor: "#D8D8D8",
-                paddingBottom: 15
-              }}
-            >
-              <Text
-                style={{
-                  flex: 1,
-                  color: "#D8D8D8",
-                  fontSize: 16
-                }}
-              >
-                {"Full name"}
-              </Text>
-              <TextInput
-                autoCorrect={false}
-                returnKeyType={"done"}
-                placeholder={""}
-                value={fullname}
-                onChangeText={text => {
-                  this.setState({
-                    fullname: text
-                  });
-                }}
-                style={{
-                  flex: 3,
-                  fontSize: 16,
-                  width: "100%",
-                  position: "absolute",
-                  paddingLeft: 100,
-                  color: colors.blueDark,
-                  fontWeight: "500",
-                  bottom: 10,
-                  right: 0,
-                  textAlign: "right"
-                }}
-              />
-            </View>
-            <View
-              style={{
-                marginVertical: 10,
-                marginHorizontal: 20,
-                flexDirection: "row",
-                borderBottomWidth: 1,
-                borderBottomColor: "#D8D8D8",
-                paddingBottom: 15
-              }}
-            >
-              <Text
-                style={{
-                  flex: 1,
-                  color: "#D8D8D8",
-                  fontSize: 16
-                }}
-              >
-                {"Email"}
-              </Text>
-              <TextInput
-                autoCorrect={false}
-                returnKeyType={"done"}
-                placeholder={""}
-                value={email}
-                onChangeText={text => {
-                  this.setState({
-                    email: text
-                  });
-                }}
-                style={{
-                  flex: 3,
-                  fontSize: 16,
-                  width: "100%",
-                  position: "absolute",
-                  paddingLeft: 100,
-                  color: colors.blueDark,
-                  fontWeight: "500",
-                  bottom: 10,
-                  right: 0,
-                  textAlign: "right"
-                }}
-              />
-            </View>
-            <View
-              style={{
-                marginVertical: 10,
-                marginHorizontal: 20,
-                flexDirection: "row",
-                borderBottomWidth: 1,
-                borderBottomColor: "#D8D8D8",
-                paddingBottom: 15
-              }}
-            >
-              <Text
-                style={{
-                  flex: 1,
-                  color: "#D8D8D8",
-                  fontSize: 16
-                }}
-              >
-                {"Phone"}
-              </Text>
-              <TextInput
-                autoCorrect={false}
-                returnKeyType={"done"}
-                placeholder={""}
-                value={phone}
-                onChangeText={text => {
-                  this.setState({
-                    phone: text
-                  });
-                }}
-                style={{
-                  flex: 3,
-                  fontSize: 16,
-                  width: "100%",
-                  color: colors.blueDark,
-                  fontWeight: "500",
-                  position: "absolute",
-                  paddingLeft: 100,
-                  bottom: 10,
-                  right: 0,
-                  textAlign: "right"
-                }}
-              />
-            </View>
-            <View
-              style={{
-                marginVertical: 10,
-                marginHorizontal: 20,
-                flexDirection: "row",
-                borderBottomWidth: 1,
-                borderBottomColor: "#D8D8D8",
-                paddingBottom: 15
-              }}
-            >
-              <Text
-                style={{
-                  flex: 1,
-                  color: "#D8D8D8",
-                  fontSize: 16
-                }}
-              >
-                {"Gender"}
-              </Text>
-              <TextInput
-                autoCorrect={false}
-                returnKeyType={"done"}
-                placeholder={""}
-                value={gender}
-                onChangeText={text => {
-                  this.setState({
-                    gender: text
-                  });
-                }}
-                style={{
-                  flex: 3,
-                  fontSize: 16,
-                  color: colors.blueDark,
-                  fontWeight: "500",
-                  width: "100%",
-                  position: "absolute",
-                  paddingLeft: 100,
-                  bottom: 10,
-                  right: 0,
-                  textAlign: "right"
-                }}
-              />
-            </View>
 
-            <TouchableOpacity
-              onPress={() => this.showDate()}
-              style={{
-                marginVertical: 10,
-                marginHorizontal: 20,
-                flexDirection: "row",
-                borderBottomWidth: 0,
-                borderBottomColor: "#D8D8D8",
-                paddingBottom: 15
+            <Formik
+              enableReinitialize
+              initialValues={{
+                firstname: user.firstName ? user.firstName : "",
+                lastname: user.lastName ? user.lastName : "",
+                email: user.email ? user.email : "",
+                phone: user.phone ? user.phone : ""
               }}
-            >
-              <Text
-                style={{
-                  flex: 1,
-                  color: "#D8D8D8",
-                  fontSize: 16
-                }}
-              >
-                {"Birth date"}
-              </Text>
+              onSubmit={(values, actions) => {
+                values.gender = gender;
+                (values._id = user.id), (values.email =
+                  user.email), (values.birthdate = birthdate);
 
-              <Text
-                style={{
-                  flex: 3,
-                  fontSize: 16,
-                  color: colors.blueDark,
-                  fontWeight: "500",
-                  width: "100%",
-                  position: "absolute",
-                  paddingLeft: 100,
-                  bottom: 10,
-                  right: 0,
-                  textAlign: "right"
-                }}
-              >
-                {birthdate.toDateString()}
-              </Text>
-            </TouchableOpacity>
+                updateUser(
+                  "users",
+                  { email: user.email },
+                  {
+                    firstName: values.firstname,
+                    lastName: values.lastname,
+                    phone: values.phone,
+                    gender: gender,
+                    birthdate: birthdate,
+                    image: image
+                  }
+                )
+                  .then(results => {
+                    console.log(results);
+                  })
+                  .catch(error => {
+                    console.log(error);
+                  });
+
+                //this.state.address.push(values);
+                //this._storeData("address",JSON.stringify(this.state.address));
+                // try {
+                //   AsyncStorage.setItem(
+                //     "address",
+                //     JSON.stringify(this.state.address)
+                //   );
+                // } catch (error) {
+                //   // Error saving data
+                // }
+                // container.addAddress(values);
+                // container.addSelectAddress(values);
+                // setTimeout(() => {
+                //   actions.setSubmitting(false);
+                //   this.props.navigation.goBack();
+                // }, 1000);
+              }}
+              validationSchema={validationSchema}
+            >
+              {formikProps =>
+                <React.Fragment>
+                  <View
+                    style={{
+                      marginTop: 40,
+                      marginVertical: 10,
+                      marginHorizontal: 20,
+                      flexDirection: "row",
+                      borderBottomWidth: 1,
+                      borderBottomColor: "#D8D8D8",
+                      paddingBottom: 15
+                    }}
+                  >
+                    <Text
+                      style={{
+                        flex: 1,
+                        color: "#D8D8D8",
+                        fontSize: 16
+                      }}
+                    >
+                      {"First name"}
+                    </Text>
+                    <TextInput
+                      autoCorrect={false}
+                      returnKeyType={"done"}
+                      placeholder={""}
+                      value={formikProps.values.firstname}
+                      onChangeText={formikProps.handleChange("firstname")}
+                      style={{
+                        flex: 3,
+                        fontSize: 16,
+                        width: "100%",
+                        position: "absolute",
+                        paddingLeft: 100,
+                        color: colors.blueDark,
+                        fontWeight: "500",
+                        bottom: 10,
+                        right: 0,
+                        textAlign: "right"
+                      }}
+                    />
+                  </View>
+                  <Text
+                    style={{
+                      color: "red",
+                      fontSize: 10,
+                      marginHorizontal: 20,
+                      marginTop: -4
+                    }}
+                  >
+                    {formikProps.errors.firstname}
+                  </Text>
+
+                  <View
+                    style={{
+                      marginVertical: 10,
+                      marginHorizontal: 20,
+                      flexDirection: "row",
+                      borderBottomWidth: 1,
+                      borderBottomColor: "#D8D8D8",
+                      paddingBottom: 15
+                    }}
+                  >
+                    <Text
+                      style={{
+                        flex: 1,
+                        color: "#D8D8D8",
+                        fontSize: 16
+                      }}
+                    >
+                      {"Last name"}
+                    </Text>
+                    <TextInput
+                      autoCorrect={false}
+                      returnKeyType={"done"}
+                      placeholder={""}
+                      value={formikProps.values.lastname}
+                      onChangeText={formikProps.handleChange("lastname")}
+                      style={{
+                        flex: 3,
+                        fontSize: 16,
+                        width: "100%",
+                        position: "absolute",
+                        paddingLeft: 100,
+                        color: colors.blueDark,
+                        fontWeight: "500",
+                        bottom: 10,
+                        right: 0,
+                        textAlign: "right"
+                      }}
+                    />
+                  </View>
+                  <Text
+                    style={{
+                      color: "red",
+                      fontSize: 10,
+                      marginHorizontal: 20,
+                      marginTop: -4
+                    }}
+                  >
+                    {formikProps.errors.lastname}
+                  </Text>
+
+                  <View
+                    style={{
+                      marginVertical: 10,
+                      marginHorizontal: 20,
+                      flexDirection: "row",
+                      borderBottomWidth: 1,
+                      borderBottomColor: "#D8D8D8",
+                      paddingBottom: 15
+                    }}
+                  >
+                    <Text
+                      style={{
+                        flex: 1,
+                        color: "#D8D8D8",
+                        fontSize: 16
+                      }}
+                    >
+                      {"Email"}
+                    </Text>
+                    <TextInput
+                      autoCorrect={false}
+                      returnKeyType={"done"}
+                      disabled
+                      placeholder={""}
+                      value={formikProps.values.email}
+                      style={{
+                        flex: 3,
+                        fontSize: 16,
+                        width: "100%",
+                        position: "absolute",
+                        paddingLeft: 100,
+                        color: colors.blueDark,
+                        fontWeight: "500",
+                        bottom: 10,
+                        right: 0,
+                        textAlign: "right"
+                      }}
+                    />
+                  </View>
+                  <Text
+                    style={{
+                      color: "red",
+                      fontSize: 10,
+                      marginHorizontal: 20,
+                      marginTop: -4
+                    }}
+                  >
+                    {formikProps.errors.email}
+                  </Text>
+                  <View
+                    style={{
+                      marginVertical: 10,
+                      marginHorizontal: 20,
+                      flexDirection: "row",
+                      borderBottomWidth: 1,
+                      borderBottomColor: "#D8D8D8",
+                      paddingBottom: 15
+                    }}
+                  >
+                    <Text
+                      style={{
+                        flex: 1,
+                        color: "#D8D8D8",
+                        fontSize: 16
+                      }}
+                    >
+                      {"Phone"}
+                    </Text>
+                    <TextInput
+                      autoCorrect={false}
+                      returnKeyType={"done"}
+                      placeholder={""}
+                      value={formikProps.values.phone}
+                      onChangeText={formikProps.handleChange("phone")}
+                      style={{
+                        flex: 3,
+                        fontSize: 16,
+                        width: "100%",
+                        color: colors.blueDark,
+                        fontWeight: "500",
+                        position: "absolute",
+                        paddingLeft: 100,
+                        bottom: 10,
+                        right: 0,
+                        textAlign: "right"
+                      }}
+                    />
+                  </View>
+                  <Text
+                    style={{
+                      color: "red",
+                      fontSize: 10,
+                      marginHorizontal: 20,
+                      marginTop: -4
+                    }}
+                  >
+                    {formikProps.errors.phone}
+                  </Text>
+                  <View
+                    style={{
+                      marginVertical: 10,
+                      marginHorizontal: 20,
+                      flexDirection: "row",
+                      borderBottomWidth: 1,
+                      borderBottomColor: "#D8D8D8",
+                      paddingBottom: 15
+                    }}
+                  >
+                    <Text
+                      style={{
+                        flex: 1,
+                        color: "#D8D8D8",
+                        fontSize: 16
+                      }}
+                    >
+                      {"Gender"}
+                    </Text>
+                  </View>
+                  <ModalPicker
+                    data={data}
+                    selectStyle={{
+                      backgroundColor: "transparent",
+                      marginTop: -50,
+                      height: 40,
+                      borderWidth: 0
+                    }}
+                    selectTextStyle={{
+                      textAlign: "right",
+                      color: colors.blueDark,
+                      marginRight: 10
+                    }}
+                    optionStyle={{
+                      height: 60,
+                      justifyContent: "center",
+                      alignItems: "center"
+                    }}
+                    cancelTextStyle={{ color: "#fff", fontSize: 17 }}
+                    cancelStyle={{
+                      height: 53,
+
+                      justifyContent: "center",
+                      alignItems: "center",
+                      backgroundColor: "#0C4767",
+                      borderRadius: 26.52
+                    }}
+                    initValue={user.gender ? user.gender : ""}
+                    onChange={option => {
+                      this.setState({ gender: option.label });
+                      //alert(`${option.label} (${option.key}) nom nom nom`);
+                    }}
+                  />
+                  <TouchableOpacity
+                    onPress={this.showDateTimePicker}
+                    style={{
+                      marginVertical: 10,
+                      marginHorizontal: 20,
+                      flexDirection: "row",
+                      borderBottomWidth: 1,
+                      borderBottomColor: "#D8D8D8",
+                      paddingBottom: 15
+                    }}
+                  >
+                    <Text
+                      style={{
+                        flex: 1,
+                        color: "#D8D8D8",
+                        fontSize: 16
+                      }}
+                    >
+                      {"Birth date"}
+                    </Text>
+
+                    <Text
+                      style={{
+                        flex: 3,
+                        fontSize: 16,
+                        color: colors.blueDark,
+                        fontWeight: "500",
+                        width: "100%",
+                        position: "absolute",
+                        paddingLeft: 100,
+                        bottom: 10,
+                        right: 0,
+                        textAlign: "right"
+                      }}
+                    >
+                      {birthdate.toDateString()}
+                    </Text>
+                  </TouchableOpacity>
+
+                  <DateTimePicker
+                    isVisible={this.state.isDateTimePickerVisible}
+                    onConfirm={this.handleDatePicked}
+                    onCancel={this.hideDateTimePicker}
+                  />
+                  {formikProps.isSubmitting
+                    ? <ActivityIndicator
+                        color={"#000"}
+                        style={{
+                          position: "absolute",
+                          bottom: 30,
+                          alignSelf: "center",
+                          justifyContent: "center",
+                          alignItems: "center"
+                        }}
+                      />
+                    : <View
+                        style={{
+                          position: "absolute",
+                          bottom: 0,
+                          alignSelf: "center",
+                          justifyContent: "center",
+                          alignItems: "center"
+                        }}
+                      >
+                        <TouchableOpacity
+                          style={{
+                            height: 53,
+                            width: 305,
+                            justifyContent: "center",
+                            alignItems: "center",
+                            backgroundColor: "#0C4767",
+                            borderRadius: 26.52,
+
+                            marginVertical: 10
+                          }}
+                          onPress={formikProps.handleSubmit}
+                        >
+                          <Text
+                            style={{
+                              fontSize: 15,
+                              color: "#fff"
+                            }}
+                          >
+                            {"SAVE"}
+                          </Text>
+                        </TouchableOpacity>
+                      </View>}
+                </React.Fragment>}
+            </Formik>
           </View>
         </KeyboardAvoidingView>
-        {showDate ? (
-          <View style={{ height: 200, marginBottom: 100 }}>
-            <TouchableOpacity
-              style={{
-                height: 20,
-                alignSelf: "flex-end"
-              }}
-              onPress={() => this.showDate()}
-            >
-              <Text
-                style={{
-                  fontSize: 17,
-                  fontWeight: "bold",
-                  color: colors.blueDark,
-                  marginRight: 20
-                }}
-              >
-                Done
-              </Text>
-            </TouchableOpacity>
-
-            <DatePickerIOS
-              mode={"date"}
-              date={this.state.birthdate}
-              onDateChange={this.setDate}
-            />
-          </View>
-        ) : null}
-      </View>
+      </ScrollView>
     );
   }
 }

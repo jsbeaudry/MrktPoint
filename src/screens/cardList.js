@@ -14,7 +14,8 @@ import Carousel from "react-native-snap-carousel";
 import { screenWidth, screenHeight } from "../utils/variables";
 import Icon from "react-native-vector-icons/Ionicons";
 import { colors } from "../utils/colors";
-
+import { Subscribe } from "unstated";
+import { StateContainer } from "../utils/stateContainer";
 const address_step = require("../images/address_step.png");
 const heightCarousel = screenHeight > 736 ? 440 : 400;
 class Delivery extends React.Component {
@@ -79,273 +80,248 @@ class Delivery extends React.Component {
   render() {
     const { cards } = this.state;
     return (
-      <View style={{ flex: 1, backgroundColor: "#fff" }}>
-        <StatusBar backgroundColor="#fff" barStyle="dark-content" />
+      <Subscribe to={[StateContainer]}>
+        {container =>
+          <View style={{ flex: 1, backgroundColor: "#fff" }}>
+            <StatusBar backgroundColor="#fff" barStyle="dark-content" />
 
-        {cards.length === 0 ? (
-          <View style={{ flex: 1 }}>
-            <Text
-              style={{
-                color: colors.black,
-                width: 170,
-                fontSize: 22,
-                marginLeft: 20,
-                marginTop: 10,
-                fontWeight: "bold"
-              }}
-            >
-              You don’t have any card associated with your account.
-            </Text>
-            <Image
-              source={require("../images/nocard.png")}
-              style={{
-                width: 100,
-                height: 100,
-                marginTop: 20,
-                marginLeft: 20,
-                borderColor: "#eee",
-                borderWidth: 0,
-                alignSelf: "flex-start",
-                resizeMode: "contain"
-              }}
-            />
-            <TouchableOpacity
-              style={{
-                position: "absolute",
-                bottom: 20,
-                height: 53,
-                width: 305,
-                justifyContent: "center",
-                alignItems: "center",
-                alignSelf: "center",
-                backgroundColor: "#0C4767",
-                borderRadius: 26.52,
-
-                marginVertical: 10
-              }}
-              onPress={() => {
-                this.props.navigation.navigate("AddAddress");
-              }}
-            >
-              <Text
-                style={{
-                  fontSize: 15,
-                  color: "#fff"
-                }}
-              >
-                {"+ Add Credit Card"}
-              </Text>
-            </TouchableOpacity>
-          </View>
-        ) : (
-          <View style={{ flex: 1 }}>
-            <Text
-              style={{
-                color: colors.black,
-                fontSize: 28,
-                width: 180,
-                marginLeft: 20,
-                marginTop: 50,
-                fontWeight: "bold"
-              }}
-            >
-              Here are your cards.
-            </Text>
-            <Carousel
-              data={cards}
-              slideStyle={{
-                marginHorizontal: 5,
-                marginTop: 20,
-                height: heightCarousel
-              }}
-              renderItem={({ item, index }) => {
-                return (
+            {container.getCards().length === 0
+              ? <View style={{ flex: 1 }}>
+                  <Text
+                    style={{
+                      color: colors.black,
+                      width: 170,
+                      fontSize: 22,
+                      marginLeft: 20,
+                      marginTop: 10,
+                      fontWeight: "bold"
+                    }}
+                  >
+                    You don’t have any card associated with your account.
+                  </Text>
+                  <Image
+                    source={require("../images/nocard.png")}
+                    style={{
+                      width: 100,
+                      height: 100,
+                      marginTop: 20,
+                      marginLeft: 20,
+                      borderColor: "#eee",
+                      borderWidth: 0,
+                      alignSelf: "flex-start",
+                      resizeMode: "contain"
+                    }}
+                  />
                   <TouchableOpacity
-                    onLongPress={() => {
-                      Alert.alert(
-                        "Delete shipping address",
-                        "Do you really want remove this address?",
-                        [
-                          {
-                            text: "Cancel",
-                            onPress: () => console.log("Cancel Pressed"),
-                            style: "cancel"
-                          },
-                          {
-                            text: "Remove",
-                            onPress: () => {
-                              this.state.address.splice(index, 1);
-                              this.setState(
-                                {
-                                  address: this.state.address
-                                },
-                                () => {
-                                  AsyncStorage.setItem(
-                                    "address",
-                                    JSON.stringify(address)
-                                  )
-                                    .then(() => {})
-                                    .catch(e => alert(e));
-                                }
-                              );
-                            }
-                          }
-                        ],
-                        { cancelable: false }
-                      );
+                    style={{
+                      position: "absolute",
+                      bottom: 20,
+                      height: 53,
+                      width: 305,
+                      justifyContent: "center",
+                      alignItems: "center",
+                      alignSelf: "center",
+                      backgroundColor: "#0C4767",
+                      borderRadius: 26.52,
+
+                      marginVertical: 10
                     }}
                     onPress={() => {
-                      this.setState({
-                        selected: index,
-                        selectedItem: item
-                      });
+                      this.props.navigation.navigate("AddCard");
                     }}
+                  >
+                    <Text
+                      style={{
+                        fontSize: 15,
+                        color: "#fff"
+                      }}
+                    >
+                      {"+ Add Credit Card"}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              : <View style={{ flex: 1 }}>
+                  <Text
                     style={{
-                      borderWidth: 3,
-                      borderColor: "transparent",
-                      borderRadius: 20,
-                      height: heightCarousel,
-                      width: 250,
+                      color: colors.black,
+                      fontSize: 28,
+                      width: 180,
+                      marginLeft: 20,
+                      marginTop: 50,
+                      fontWeight: "bold"
+                    }}
+                  >
+                    Here are your cards.
+                  </Text>
+
+                  <CarouselItems
+                    cards={container.getCards()}
+                    goto={this.props}
+                  />
+                  <View
+                    style={{
+                      position: "absolute",
+                      bottom: 15,
+                      alignSelf: "center",
                       justifyContent: "center",
                       alignItems: "center"
                     }}
                   >
-                    <ImageBackground
-                      source={
-                        item.type == "visa"
-                          ? require(`../images/background2.png`)
-                          : require(`../images/background3.png`)
-                      }
-                      borderRadius={20}
+                    <TouchableOpacity
                       style={{
-                        marginHorizontal: 20,
-                        height: heightCarousel,
-                        width: 250,
+                        height: 53,
+                        width: 305,
                         justifyContent: "center",
                         alignItems: "center",
+                        backgroundColor: "#0C4767",
+                        borderRadius: 26.52,
 
-                        backgroundColor: "transparent",
-                        borderRadius: 20,
-                        alignSelf: "center"
+                        marginVertical: 10
                       }}
                       onPress={() => {
-                        this.props.navigation.navigate("Address");
+                        this.props.navigation.navigate("AddCard");
                       }}
                     >
-                      <View
+                      <Text
                         style={{
-                          position: "absolute",
-                          top: 10,
-                          right: 10,
-                          flexDirection: "row",
-                          justifyContent: "center",
-                          alignItems: "center"
+                          fontSize: 15,
+                          color: "#fff"
                         }}
                       >
-                        <Image
-                          source={
-                            item.type == "visa"
-                              ? require(`../images/visa_logo.png`)
-                              : require(`../images/mastercard_logo.png`)
-                          }
-                          style={{
-                            width: 60,
-                            resizeMode: "contain",
-                            borderColor: "#eee",
-                            borderWidth: 0
-                          }}
-                        />
-                      </View>
-                      <View
-                        style={{
-                          position: "absolute",
-                          bottom: 20,
-                          alignSelf: "center"
-                        }}
-                      >
-                        <Text
-                          style={{
-                            color: "#fff",
-                            fontSize: 15,
-                            fontWeight: "bold",
-                            marginBottom: 10
-                          }}
-                        >
-                          {item.card_number}
-                        </Text>
-                        <View
-                          style={{
-                            flexDirection: "row",
-                            justifyContent: "space-between",
-                            alignItems: "center"
-                          }}
-                        >
-                          <Text
-                            style={{
-                              color: "#fff",
-                              fontSize: 14
-                            }}
-                          >
-                            {item.card_fullname}
-                          </Text>
-                          <Text
-                            style={{
-                              color: "#fff",
-                              fontSize: 14
-                            }}
-                          >
-                            {item.card_expiry}
-                          </Text>
-                        </View>
-                      </View>
-                    </ImageBackground>
-                  </TouchableOpacity>
-                );
-              }}
-              sliderWidth={screenWidth}
-              sliderHeight={heightCarousel}
-              itemHeight={heightCarousel}
-              itemWidth={250}
-            />
-            <View
-              style={{
-                position: "absolute",
-                bottom: 15,
-                alignSelf: "center",
-                justifyContent: "center",
-                alignItems: "center"
-              }}
-            >
-              <TouchableOpacity
-                style={{
-                  height: 53,
-                  width: 305,
-                  justifyContent: "center",
-                  alignItems: "center",
-                  backgroundColor: "#0C4767",
-                  borderRadius: 26.52,
-
-                  marginVertical: 10
-                }}
-                onPress={() => {
-                  this.props.navigation.navigate("AddCard");
-                }}
-              >
-                <Text
-                  style={{
-                    fontSize: 15,
-                    color: "#fff"
-                  }}
-                >
-                  {"+ Add New Card"}
-                </Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        )}
-      </View>
+                        {"+ Add New Card"}
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>}
+          </View>}
+      </Subscribe>
     );
   }
 }
 
 export default Delivery;
+
+class CarouselItems extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { cards: [] };
+  }
+  componentWillMount() {
+    setTimeout(() => {
+      this.setState({ cards: this.props.cards });
+    }, 100);
+  }
+
+  render() {
+    const { cards } = this.state;
+    return (
+      <Carousel
+        data={cards.filter(i => i.card_fullname != null)}
+        slideStyle={{
+          marginHorizontal: 5,
+          marginTop: 20,
+          height: heightCarousel
+        }}
+        renderItem={({ item, index }) => {
+          return (
+            <TouchableOpacity>
+              <ImageBackground
+                source={
+                  item.type == "visa"
+                    ? require(`../images/background2.png`)
+                    : require(`../images/background3.png`)
+                }
+                borderRadius={20}
+                style={{
+                  marginHorizontal: 20,
+                  height: heightCarousel,
+                  width: 250,
+                  justifyContent: "center",
+                  alignItems: "center",
+
+                  backgroundColor: "transparent",
+                  borderRadius: 20,
+                  alignSelf: "center"
+                }}
+                onPress={() => {
+                  this.props.navigation.navigate("Address");
+                }}
+              >
+                <View
+                  style={{
+                    position: "absolute",
+                    top: 10,
+                    right: 10,
+                    flexDirection: "row",
+                    justifyContent: "center",
+                    alignItems: "center"
+                  }}
+                >
+                  <Image
+                    source={
+                      item.type == "visa"
+                        ? require(`../images/visa_logo.png`)
+                        : require(`../images/mastercard_logo.png`)
+                    }
+                    style={{
+                      width: 60,
+                      resizeMode: "contain",
+                      borderColor: "#eee",
+                      borderWidth: 0
+                    }}
+                  />
+                </View>
+                <View
+                  style={{
+                    position: "absolute",
+                    bottom: 20,
+                    alignSelf: "center"
+                  }}
+                >
+                  <Text
+                    style={{
+                      color: "#fff",
+                      fontSize: 15,
+                      fontWeight: "bold",
+                      marginBottom: 10
+                    }}
+                  >
+                    {item.card_number}
+                  </Text>
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      justifyContent: "space-between",
+                      alignItems: "center"
+                    }}
+                  >
+                    <Text
+                      style={{
+                        color: "#fff",
+                        fontSize: 14
+                      }}
+                    >
+                      {item.card_fullname}
+                    </Text>
+                    <Text
+                      style={{
+                        color: "#fff",
+                        fontSize: 14
+                      }}
+                    >
+                      {item.card_expiry}
+                    </Text>
+                  </View>
+                </View>
+              </ImageBackground>
+            </TouchableOpacity>
+          );
+        }}
+        sliderWidth={screenWidth}
+        sliderHeight={heightCarousel}
+        itemHeight={heightCarousel}
+        itemWidth={250}
+      />
+    );
+  }
+}

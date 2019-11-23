@@ -1,25 +1,22 @@
 import React from "react";
 import {
-  StyleSheet,
   Platform,
   Text,
   StatusBar,
   TouchableOpacity,
   ActivityIndicator,
-  Button,
-  Picker,
   TextInput,
   View
 } from "react-native";
-import { screenWidth, screenHeight } from "../utils/variables";
+import { screenWidth } from "../utils/variables";
 import Icon from "react-native-vector-icons/Ionicons";
 import { colors } from "../utils/colors";
 import { Formik } from "formik";
 import * as yup from "yup";
 import { Subscribe } from "unstated";
 import { StateContainer } from "../utils/stateContainer";
-import SelectPicker from "react-native-select-picker";
-
+// import SelectPicker from "react-native-select-picker";
+import { AsyncStorage } from "react-native";
 const validationSchema = yup.object().shape({
   fullname: yup.string().required().label("fullname"),
   address1: yup.string().required().label("address"),
@@ -72,11 +69,28 @@ class Delivery extends React.Component {
       zipcode: "",
       phone: "",
       email: "",
-      selected: "apple"
+      selected: "apple",
+      address: []
     };
   }
-  componentWillMount() {}
+  componentWillMount() {
+    this.retrieveData("address");
+  }
 
+  retrieveData = async key => {
+    try {
+      const value = await AsyncStorage.getItem(key);
+      if (value !== null) {
+        // We have data!!
+        console.log(value);
+        this.setState({
+          address: JSON.parse(value)
+        });
+      }
+    } catch (error) {
+      // Error retrieving data
+    }
+  };
   render() {
     const { country } = this.state;
     return (
@@ -99,7 +113,16 @@ class Delivery extends React.Component {
               }}
               onSubmit={(values, actions) => {
                 //alert(JSON.stringify(values));
-
+                this.state.address.push(values);
+                //this._storeData("address",JSON.stringify(this.state.address));
+                // try {
+                //   AsyncStorage.setItem(
+                //     "address",
+                //     JSON.stringify(this.state.address)
+                //   );
+                // } catch (error) {
+                //   // Error saving data
+                // }
                 container.addAddress(values);
                 container.addSelectAddress(values);
                 setTimeout(() => {
@@ -303,7 +326,7 @@ class Delivery extends React.Component {
                         />
                       </View>
                     </View>
-                    <SelectPicker
+                    {/* <SelectPicker
                       onValueChange={value => {
                         // Do anything you want with the value.
                         // For example, save in state.
@@ -318,7 +341,7 @@ class Delivery extends React.Component {
                       <SelectPicker.Item label="Apple" value="apple" />
                       <SelectPicker.Item label="Banana" value="banana" />
                       <SelectPicker.Item label="Orange" value="orange" />
-                    </SelectPicker>
+                    </SelectPicker> */}
                   </View>
 
                   {formikProps.isSubmitting

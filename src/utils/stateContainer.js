@@ -1,5 +1,7 @@
 import { Container } from "unstated";
+import { updateUser } from "../services";
 
+import { Stitch } from "mongodb-stitch-react-native-sdk";
 class StateContainer extends Container {
   state = {
     items: [],
@@ -7,14 +9,44 @@ class StateContainer extends Container {
     orders: [],
     addresses: [],
     cards: [],
-    selectAddress: {}
+    selectAddress: {},
+    selectCard: {}
   };
 
   addItem = item => {
     this.state.items.push(item);
-    this.setState(prevState => ({
-      items: prevState.items
-    }));
+    this.setState(
+      prevState => ({
+        items: prevState.items
+      }),
+      () => {
+        let data_ = Stitch.defaultAppClient.auth.activeUserAuthInfo;
+        if (
+          Stitch.defaultAppClient.auth.activeUserAuthInfo &&
+          Stitch.defaultAppClient.auth.activeUserAuthInfo.userId != undefined
+        ) {
+          updateUser(
+            "users",
+            { user_id: data_.userId },
+            {
+              addressShipping: this.state.items
+            }
+          )
+            .then(results => {
+              console.log(results);
+            })
+            .catch(error => {
+              console.log(error);
+            });
+        }
+      }
+    );
+  };
+  modifyItemCount = (id, val) => {
+    this.state.items[id].count = val;
+    this.setState({
+      items: this.state.items
+    });
   };
   addAddress = address => {
     if (this.state.addresses.filter(i => i.addNew == true) == 0) {
@@ -30,9 +62,31 @@ class StateContainer extends Container {
       () => {}
     );
   };
+
+  addCard = card => {
+    if (this.state.cards.filter(i => i.addNew == true) == 0) {
+      this.state.cards.push({
+        addNew: true
+      });
+    }
+    this.state.cards.unshift(card);
+    this.setState(
+      {
+        cards: this.state.cards
+      },
+      () => {}
+    );
+  };
+
   addSelectAddress = selectAddress => {
     this.setState({
       selectAddress
+    });
+  };
+
+  addSelectCard = selectCard => {
+    this.setState({
+      selectCard
     });
   };
 
@@ -42,8 +96,15 @@ class StateContainer extends Container {
   getAddresses = () => {
     return this.state.addresses;
   };
+  getCards = () => {
+    return this.state.cards;
+  };
+
   getSelectAddress = () => {
     return this.state.selectAddress;
+  };
+  getSelectCard = () => {
+    return this.state.selectCard;
   };
 
   getItemsTotal = () => {

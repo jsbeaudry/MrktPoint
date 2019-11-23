@@ -19,12 +19,13 @@ import {
 } from "../utils/variables";
 import { Ionicons } from "@expo/vector-icons";
 import { Stitch } from "mongodb-stitch-react-native-sdk";
-
+import { getOne } from "../services";
 class Profile extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
       user: {
+        user: {},
         firstName: "John Melville",
         lastName: "Bob",
         image:
@@ -65,8 +66,31 @@ class Profile extends React.Component {
       );
     }
   }
-  componentDidMount() {
+
+  componentWillMount() {
     this._loadClient();
+    let data_ = Stitch.defaultAppClient.auth.activeUserAuthInfo;
+    if (
+      Stitch.defaultAppClient.auth.activeUserAuthInfo &&
+      Stitch.defaultAppClient.auth.activeUserAuthInfo.userId != undefined
+    ) {
+      getOne("users", { user_id: data_.userId })
+        .then(results => {
+          console.log(results);
+
+          this.setState(
+            {
+              user: results[0]
+            },
+            () => {
+              //alert(JSON.stringify(this.state.user.image.base64));
+            }
+          );
+        })
+        .catch(error => {
+          console.log(error);
+        });
+    }
   }
   render() {
     const { user } = this.state;
@@ -115,6 +139,8 @@ class Profile extends React.Component {
           <Image
             source={{
               uri: user.image
+                ? `data:image/jpg;base64,${user.image.base64}`
+                : "https://www.leisureopportunities.co.uk/images/995586_746594.jpg"
             }}
             borderRadius={40}
             style={{
@@ -164,7 +190,7 @@ class Profile extends React.Component {
               goTo: "CardList",
               margin: 50
             }
-          ].map(item => (
+          ].map(item =>
             <TouchableOpacity
               key={JSON.stringify(item)}
               onPress={() => {
@@ -213,7 +239,7 @@ class Profile extends React.Component {
                 />
               </View>
             </TouchableOpacity>
-          ))}
+          )}
 
           <TouchableOpacity
             onPress={() => {

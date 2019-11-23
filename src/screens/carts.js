@@ -25,7 +25,7 @@ import { CartItem, addMultipleOrder } from "../components";
 import { addOrder } from "../services/stitch";
 import { Stitch } from "mongodb-stitch-react-native-sdk";
 const mystates = new StateContainer();
-
+import { AsyncStorage } from "react-native";
 let datas = [
   {
     cretedAt: 16,
@@ -125,17 +125,28 @@ class Orders extends React.Component {
       bags: [],
       shops: []
     };
-
-    //alert(mystates.state.getItems().length);
-    console.log(mystates);
   }
 
-  componentDidMount() {
+  async componentWillMount() {
+    try {
+      const value = await AsyncStorage.getItem("items");
+      //alert(value);
+      if (value !== null) {
+        // We have data!!
+        //alert(value);
+        this.setState({ bags: JSON.parse(value) });
+      }
+    } catch (error) {
+      // Error retrieving data
+      alert("Error");
+    }
+  }
+  async componentDidMount() {
     for (let [key, value] of Object.entries(this.state.bags)) {
       //console.log(`name:'${key}', list: ${JSON.stringify(value)}`);
       this.state.shops.push({ name: `${key}`, list: value });
     }
-    console.log(this.state.shops);
+    //console.log(this.state.shops);
     this.setState({ shops: this.state.shops });
   }
 
@@ -175,7 +186,7 @@ class Orders extends React.Component {
                         justifyContent: "center",
                         height: 100,
                         backgroundColor: "#fff",
-                        width: screenWidth - 60,
+                        width: screenWidth - 30,
                         marginTop: 90,
                         marginBottom: 30,
                         alignSelf: "center"
@@ -245,6 +256,7 @@ class Orders extends React.Component {
                                   true
                                   //index1 != item.items.length - 1 ? false : true
                                 }
+                                id={index}
                                 subTitle={item.name}
                                 title={
                                   item1.name.length <= 17
@@ -257,7 +269,7 @@ class Orders extends React.Component {
                                 }}
                                 price={item1.price}
                                 stock={10}
-                                count={1}
+                                count={item1.count}
                                 updateCount={count => {}}
                               />
                             </TouchableOpacity>

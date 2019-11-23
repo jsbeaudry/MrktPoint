@@ -24,16 +24,6 @@ export default class App extends Component {
   }
 
   _loadClient() {
-    Stitch.initializeDefaultAppClient(stitchConfig.appId).then(client => {
-      this.setState({ client });
-      this.state.client.auth
-        .loginWithCredential(new AnonymousCredential())
-        .then(user => {
-          console.log(`Successfully logged in as user ${user}`);
-        })
-        .catch(err => {
-          console.log(`Failed to log in anonymously: ${err}`);
-        });
-    });
+    Stitch.initializeDefaultAppClient(stitchConfig.appId);
   }
 }

@@ -424,6 +424,7 @@ class Details extends React.Component {
                 }}
                 onPress={() => {
                   this.toggleModal();
+                  product.count = this.state.count;
                   container.addItem(product);
                 }}
               >
@@ -785,7 +786,7 @@ class Details extends React.Component {
                         marginLeft: moderateScale(10, scaleIndice)
                       }}
                     >
-                      {` ${product.shop}`}
+                      {`${product.shop}`}
                     </Text>
                   </View>
                   <View

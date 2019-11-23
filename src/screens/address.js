@@ -87,7 +87,7 @@ class Delivery extends React.Component {
     const { address } = this.state;
     return (
       <Subscribe to={[StateContainer]}>
-        {container => (
+        {container =>
           <View style={{ flex: 1, backgroundColor: "#fff" }}>
             <StatusBar backgroundColor="#fff" barStyle="dark-content" />
             <View style={{ flex: 1 }}>
@@ -125,278 +125,60 @@ class Delivery extends React.Component {
                 Delivery Address
               </Text>
 
-              {container.getAddresses().length == 0 ? (
-                <TouchableOpacity
-                  style={{
-                    height: heightCarousel,
-                    width: 210,
-                    marginTop: 20,
-                    justifyContent: "center",
-                    alignItems: "center",
-
-                    backgroundColor: "transparent",
-                    borderRadius: 20,
-                    alignSelf: "center",
-
-                    borderWidth: 3,
-                    borderColor: "#D8D8D8"
-                  }}
-                  onPress={() => {
-                    this.props.navigation.navigate("AddAddress");
-                  }}
-                >
-                  <TouchableOpacity
+              {container.getAddresses().length == 0
+                ? <TouchableOpacity
                     style={{
-                      flex: 20,
-                      position: "absolute",
-                      top: 10,
-                      left: 10,
+                      height: heightCarousel,
+                      width: 210,
+                      marginTop: 20,
                       justifyContent: "center",
-                      alignItems: "center"
+                      alignItems: "center",
+
+                      backgroundColor: "transparent",
+                      borderRadius: 20,
+                      alignSelf: "center",
+
+                      borderWidth: 3,
+                      borderColor: "#D8D8D8"
                     }}
-                    onPress={() => this.props.navigation.goBack()}
+                    onPress={() => {
+                      this.props.navigation.navigate("AddAddress");
+                    }}
                   >
-                    <Icon
-                      name={"ios-add"}
-                      type="ionicon"
-                      color={"#D8D8D8"}
-                      opacity={1}
-                      size={35}
-                      iconStyle={{}}
-                    />
+                    <TouchableOpacity
+                      style={{
+                        flex: 20,
+                        position: "absolute",
+                        top: 10,
+                        left: 10,
+                        justifyContent: "center",
+                        alignItems: "center"
+                      }}
+                      onPress={() => this.props.navigation.goBack()}
+                    >
+                      <Icon
+                        name={"ios-add"}
+                        type="ionicon"
+                        color={"#D8D8D8"}
+                        opacity={1}
+                        size={35}
+                        iconStyle={{}}
+                      />
+                    </TouchableOpacity>
+                    <Text
+                      style={{
+                        color: "#979797",
+                        fontSize: 18,
+                        fontWeight: "bold"
+                      }}
+                    >
+                      {"Add Address"}
+                    </Text>
                   </TouchableOpacity>
-                  <Text
-                    style={{
-                      color: "#979797",
-                      fontSize: 18,
-                      fontWeight: "bold"
-                    }}
-                  >
-                    {"Add Address"}
-                  </Text>
-                </TouchableOpacity>
-              ) : (
-                <Carousel
-                  data={container.getAddresses()}
-                  slideStyle={{
-                    marginHorizontal: 5,
-                    marginTop: 20,
-                    height: 320
-                  }}
-                  firstItem={0}
-                  snapToStart={container.getAddresses().length - 1}
-                  onSnapToItem={index => {
-                    if (
-                      container.getAddresses()[index] &&
-                      container.getAddresses()[index].addNew == null
-                    )
-                      container.addSelectAddress(
-                        container.getAddresses()[index]
-                      );
-                  }}
-                  renderItem={({ item, index }) => {
-                    if (!item.addNew) {
-                      return (
-                        <TouchableOpacity
-                          onLongPress={() => {
-                            Alert.alert(
-                              "Delete shipping address",
-                              "Do you really want remove this address?",
-                              [
-                                {
-                                  text: "Cancel",
-                                  onPress: () => console.log("Cancel Pressed"),
-                                  style: "cancel"
-                                },
-                                {
-                                  text: "Remove",
-                                  onPress: () => {
-                                    this.state.address.splice(index, 1);
-                                    this.setState(
-                                      {
-                                        address: this.state.address
-                                      },
-                                      () => {
-                                        AsyncStorage.setItem(
-                                          "address",
-                                          JSON.stringify(address)
-                                        )
-                                          .then(() => {})
-                                          .catch(e => alert(e));
-                                      }
-                                    );
-                                  }
-                                }
-                              ],
-                              { cancelable: false }
-                            );
-                          }}
-                          onPress={() => {
-                            this.setState({
-                              selected: index,
-                              selectedItem: item
-                            });
-                          }}
-                          style={{
-                            borderWidth: 3,
-                            borderColor: "transparent",
-                            borderRadius: 20,
-                            height: heightCarousel,
-                            width: 210,
-                            justifyContent: "center",
-                            alignItems: "center"
-                          }}
-                        >
-                          <ImageBackground
-                            source={require("../images/background2.png")}
-                            borderRadius={20}
-                            style={{
-                              height: heightCarousel,
-                              width: 210,
-                              borderColor: "#eee",
-                              borderWidth: 1,
-                              justifyContent: "center",
-                              alignItems: "center",
-                              backgroundColor: "transparent",
-                              borderRadius: 20,
-                              alignSelf: "center"
-                            }}
-                            onPress={() => {
-                              this.props.navigation.navigate("Address");
-                            }}
-                          >
-                            <View
-                              style={{
-                                position: "absolute",
-                                top: 10,
-                                right: 10,
-                                flexDirection: "row",
-                                justifyContent: "center",
-                                alignItems: "center"
-                              }}
-                            >
-                              <Icon
-                                name={"ios-business"}
-                                type="ionicon"
-                                color={"#fff"}
-                                opacity={1}
-                                size={25}
-                                iconStyle={{}}
-                              />
-                              <Text
-                                style={{
-                                  color: "#fff",
-                                  fontSize: 13,
-                                  fontWeight: "bold",
-                                  marginLeft: 3
-                                }}
-                              >
-                                {"Work"}
-                              </Text>
-                            </View>
-                            <View
-                              style={{
-                                width: 130,
-                                position: "absolute",
-                                bottom: 20,
-                                left: 20
-                              }}
-                            >
-                              <Text
-                                style={{
-                                  color: "#fff",
-                                  fontSize: 13,
-                                  fontWeight: "bold",
-                                  alignSelf: "flex-start",
-                                  marginRight: 10,
-
-                                  textAlign: "left",
-                                  width: 200
-                                }}
-                              >
-                                {item.fullname}
-                              </Text>
-
-                              <Text
-                                style={{
-                                  color: "#fff",
-                                  marginRight: 10,
-                                  fontSize: 10,
-                                  textAlign: "left",
-                                  alignSelf: "flex-start"
-                                }}
-                              >
-                                {item.address1 +
-                                  ", " +
-                                  item.addres2 +
-                                  ", " +
-                                  item.city +
-                                  ", " +
-                                  item.country}
-                              </Text>
-                            </View>
-                          </ImageBackground>
-                        </TouchableOpacity>
-                      );
-                    } else {
-                      return (
-                        <TouchableOpacity
-                          style={{
-                            height: heightCarousel,
-                            width: 210,
-                            justifyContent: "center",
-                            alignItems: "center",
-
-                            backgroundColor: "transparent",
-                            borderRadius: 20,
-                            alignSelf: "center",
-
-                            borderWidth: 3,
-                            borderColor: "#D8D8D8"
-                          }}
-                          onPress={() => {
-                            this.props.navigation.navigate("AddAddress");
-                          }}
-                        >
-                          <TouchableOpacity
-                            style={{
-                              flex: 20,
-                              position: "absolute",
-                              top: 10,
-                              left: 10,
-                              justifyContent: "center",
-                              alignItems: "center"
-                            }}
-                            onPress={() => this.props.navigation.goBack()}
-                          >
-                            <Icon
-                              name={"ios-add"}
-                              type="ionicon"
-                              color={"#D8D8D8"}
-                              opacity={1}
-                              size={35}
-                              iconStyle={{}}
-                            />
-                          </TouchableOpacity>
-                          <Text
-                            style={{
-                              color: "#979797",
-                              fontSize: 18,
-                              fontWeight: "bold"
-                            }}
-                          >
-                            {"Add Address"}
-                          </Text>
-                        </TouchableOpacity>
-                      );
-                    }
-                  }}
-                  sliderWidth={screenWidth}
-                  sliderHeight={heightCarousel}
-                  itemHeight={heightCarousel}
-                  itemWidth={210}
-                />
-              )}
+                : <CarouselItems
+                    address={container.getAddresses()}
+                    goTo={this.props}
+                  />}
               <View
                 style={{
                   position: "absolute",
@@ -468,11 +250,247 @@ class Delivery extends React.Component {
                 </TouchableOpacity>
               </View>
             </View>
-          </View>
-        )}
+          </View>}
       </Subscribe>
     );
   }
 }
 
 export default Delivery;
+
+class CarouselItems extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { address: [], selectedItem: "" };
+  }
+  componentWillMount() {
+    setTimeout(() => {
+      this.setState({ address: this.props.address });
+    }, 500);
+  }
+
+  render() {
+    const { address, selectedItem } = this.state;
+    return (
+      <Subscribe to={[StateContainer]}>
+        {container =>
+          <Carousel
+            data={address}
+            slideStyle={{
+              marginHorizontal: 5,
+              marginTop: 20,
+              height: 320
+            }}
+            firstItem={0}
+            snapToStart={address.length - 1}
+            onSnapToItem={index => {
+              if (address[index] && address[index].addNew == null) {
+                container.addSelectAddress(address[index]);
+              }
+            }}
+            renderItem={({ item, index }) => {
+              if (!item.addNew) {
+                return (
+                  <TouchableOpacity
+                    onLongPress={() => {
+                      Alert.alert(
+                        "Delete shipping address",
+                        "Do you really want remove this address?",
+                        [
+                          {
+                            text: "Cancel",
+                            onPress: () => console.log("Cancel Pressed"),
+                            style: "cancel"
+                          },
+                          {
+                            text: "Remove",
+                            onPress: () => {
+                              this.state.address.splice(index, 1);
+                              this.setState(
+                                {
+                                  address: this.state.address
+                                },
+                                () => {
+                                  AsyncStorage.setItem(
+                                    "address",
+                                    JSON.stringify(address)
+                                  )
+                                    .then(() => {})
+                                    .catch(e => alert(e));
+                                }
+                              );
+                            }
+                          }
+                        ],
+                        { cancelable: false }
+                      );
+                    }}
+                    onPress={() => {
+                      this.setState({
+                        selected: index,
+                        selectedItem: item
+                      });
+                    }}
+                    style={{
+                      borderWidth: 3,
+                      borderColor: "transparent",
+                      borderRadius: 20,
+                      height: heightCarousel,
+                      width: 210,
+                      justifyContent: "center",
+                      alignItems: "center"
+                    }}
+                  >
+                    <ImageBackground
+                      source={require("../images/background2.png")}
+                      borderRadius={20}
+                      style={{
+                        height: heightCarousel,
+                        width: 210,
+                        borderColor: "#eee",
+                        borderWidth: 1,
+                        justifyContent: "center",
+                        alignItems: "center",
+                        backgroundColor: "transparent",
+                        borderRadius: 20,
+                        alignSelf: "center"
+                      }}
+                      onPress={() => {
+                        this.props.navigation.navigate("Address");
+                      }}
+                    >
+                      <View
+                        style={{
+                          position: "absolute",
+                          top: 10,
+                          right: 10,
+                          flexDirection: "row",
+                          justifyContent: "center",
+                          alignItems: "center"
+                        }}
+                      >
+                        <Icon
+                          name={"ios-business"}
+                          type="ionicon"
+                          color={"#fff"}
+                          opacity={1}
+                          size={25}
+                          iconStyle={{}}
+                        />
+                        <Text
+                          style={{
+                            color: "#fff",
+                            fontSize: 13,
+                            fontWeight: "bold",
+                            marginLeft: 3
+                          }}
+                        >
+                          {"Work" + selectedItem}
+                        </Text>
+                      </View>
+                      <View
+                        style={{
+                          width: 130,
+                          position: "absolute",
+                          bottom: 20,
+                          left: 20
+                        }}
+                      >
+                        <Text
+                          style={{
+                            color: "#fff",
+                            fontSize: 13,
+                            fontWeight: "bold",
+                            alignSelf: "flex-start",
+                            marginRight: 10,
+
+                            textAlign: "left",
+                            width: 200
+                          }}
+                        >
+                          {item.fullname}
+                        </Text>
+
+                        <Text
+                          style={{
+                            color: "#fff",
+                            marginRight: 10,
+                            fontSize: 10,
+                            textAlign: "left",
+                            alignSelf: "flex-start"
+                          }}
+                        >
+                          {item.address1 +
+                            ", " +
+                            item.addres2 +
+                            ", " +
+                            item.city +
+                            ", " +
+                            item.country}
+                        </Text>
+                      </View>
+                    </ImageBackground>
+                  </TouchableOpacity>
+                );
+              } else {
+                return (
+                  <TouchableOpacity
+                    style={{
+                      height: heightCarousel,
+                      width: 210,
+                      justifyContent: "center",
+                      alignItems: "center",
+
+                      backgroundColor: "transparent",
+                      borderRadius: 20,
+                      alignSelf: "center",
+
+                      borderWidth: 3,
+                      borderColor: "#D8D8D8"
+                    }}
+                    onPress={() => {
+                      this.props.goTo.navigation.navigate("AddAddress");
+                    }}
+                  >
+                    <TouchableOpacity
+                      style={{
+                        flex: 20,
+                        position: "absolute",
+                        top: 10,
+                        left: 10,
+                        justifyContent: "center",
+                        alignItems: "center"
+                      }}
+                      onPress={() => this.props.navigation.goBack()}
+                    >
+                      <Icon
+                        name={"ios-add"}
+                        type="ionicon"
+                        color={"#D8D8D8"}
+                        opacity={1}
+                        size={35}
+                        iconStyle={{}}
+                      />
+                    </TouchableOpacity>
+                    <Text
+                      style={{
+                        color: "#979797",
+                        fontSize: 18,
+                        fontWeight: "bold"
+                      }}
+                    >
+                      {"Add Address"}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              }
+            }}
+            sliderWidth={screenWidth}
+            sliderHeight={heightCarousel}
+            itemHeight={heightCarousel}
+            itemWidth={210}
+          />}
+      </Subscribe>
+    );
+  }
+}

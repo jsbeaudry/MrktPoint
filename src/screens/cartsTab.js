@@ -25,69 +25,6 @@ import { CartItem, addMultipleOrder } from "../components";
 import { addOrder } from "../services/stitch";
 import { Stitch } from "mongodb-stitch-react-native-sdk";
 const mystates = new StateContainer();
-
-let datas = [
-  {
-    cretedAt: 16,
-    currency: "usd",
-    delivery_time: "10 - 20 mins",
-    image:
-      "https://thumbor.forbes.com/thumbor/960x0/https%3A%2F%2Fblogs-images.forbes.com%2Fgordonkelly%2Ffiles%2F2019%2F07%2FScreenshot-2019-07-15-at-02.32.05.jpg",
-    name: 'TETS-4916.A - LED 50" WESTPOINT PC IN HDMI',
-    price: 375,
-    product_by: "Tecno",
-    shop: "Valerio Canez S.A.",
-    stock: 2
-  },
-  {
-    cretedAt: 10,
-    currency: "usd",
-    delivery_time: "10 - 20 mins",
-    image:
-      "https://thumbor.forbes.com/thumbor/960x0/https%3A%2F%2Fblogs-images.forbes.com%2Fgordonkelly%2Ffiles%2F2019%2F07%2FScreenshot-2019-07-15-at-02.32.05.jpg",
-    name: "kdftu",
-    price: 88,
-    product_by: "Tecno",
-    shop: "Valerio Canez S.A.",
-    stock: 5
-  },
-  {
-    cretedAt: 94,
-    currency: "usd",
-    delivery_time: "10 - 20 mins",
-    image:
-      "https://thumbor.forbes.com/thumbor/960x0/https%3A%2F%2Fblogs-images.forbes.com%2Fgordonkelly%2Ffiles%2F2019%2F07%2FScreenshot-2019-07-15-at-02.32.05.jpg",
-    name: "GVS04BDWSS - 4cuft Wine Cooler General Electric",
-    price: 550,
-    product_by: "Tecno",
-    shop: "Valerio Canez S.A.",
-    stock: 3
-  },
-  {
-    cretedAt: 49,
-    currency: "htg",
-    delivery_time: "10 - 20 mins",
-    image:
-      "https://thumbor.forbes.com/thumbor/960x0/https%3A%2F%2Fblogs-images.forbes.com%2Fgordonkelly%2Ffiles%2F2019%2F07%2FScreenshot-2019-07-15-at-02.32.05.jpg",
-    name: "LZ1705D - SOFA BED RED WITH BLUETOOTH METAL LEG",
-    price: 2403,
-    product_by: "Tecno",
-    shop: "Thomson",
-    stock: 200
-  },
-  {
-    cretedAt: 93,
-    currency: "usd",
-    delivery_time: "10 - 20 mins",
-    image:
-      "https://thumbor.forbes.com/thumbor/960x0/https%3A%2F%2Fblogs-images.forbes.com%2Fgordonkelly%2Ffiles%2F2019%2F07%2FScreenshot-2019-07-15-at-02.32.05.jpg",
-    name: "K12UM - SDMO/KOHLER 12KW SILENT GENERATOR",
-    price: 10000,
-    product_by: "Tecno",
-    shop: "Thomson",
-    stock: 5
-  }
-];
 class Orders extends React.Component {
   static navigationOptions = ({ navigation }) => {
     const { params = {} } = navigation.state;
@@ -101,9 +38,6 @@ class Orders extends React.Component {
       bags: [],
       shops: []
     };
-
-    //alert(mystates.state.getItems().length);
-    console.log(mystates);
   }
 
   componentDidMount() {
@@ -197,7 +131,7 @@ class Orders extends React.Component {
                         <View
                           style={{
                             backgroundColor: "#fff",
-                            width: screenWidth - 60,
+                            width: screenWidth - 30,
                             marginTop: 10,
                             paddingTop: 10,
                             marginBottom: 20,
@@ -241,6 +175,7 @@ class Orders extends React.Component {
                                   true
                                   //index1 != item.items.length - 1 ? false : true
                                 }
+                                id={index}
                                 subTitle={item.name}
                                 title={
                                   item1.name.length <= 17
@@ -253,7 +188,7 @@ class Orders extends React.Component {
                                 }}
                                 price={item1.price}
                                 stock={10}
-                                count={1}
+                                count={item1.count}
                                 updateCount={count => {}}
                               />
                             </TouchableOpacity>
@@ -261,66 +196,6 @@ class Orders extends React.Component {
                         </View>}
                     />}
               </ScrollView>
-
-              {/* -------------------------------------------------------------------------- */
-              /*                                  Promotion                                 */
-              /* -------------------------------------------------------------------------- */}
-
-              {/* <View
-            style={{
-              height: 50,
-              backgroundColor: "#EEEEEE",
-              alignItems: "center",
-              justifyContent: "space-between",
-              padding: 15,
-              flexDirection: "row"
-            }}
-          >
-            <Text
-              style={{
-                color: "#929292",
-                opacity: 1,
-                fontSize: 16,
-                textAlign: "center"
-              }}
-            >
-              {"Promo code"}
-            </Text>
-            <View style={{ flexDirection: "row" }}>
-              <TextInput
-                style={{
-                  color: "#1D1D1D",
-                  opacity: 1,
-                  fontSize: 16,
-                  paddingHorizontal: 5,
-                  marginHorizontal: 5,
-                  textAlign: "center"
-                }}
-              >
-                {"summer2019"}
-              </TextInput>
-              <TouchableOpacity
-                style={{
-                  backgroundColor: "#999",
-                  height: 30,
-                  width: 30,
-                  borderRadius: 15,
-                  marginTop: -5,
-                  marginLeft: 5,
-                  justifyContent: "center",
-                  alignItems: "center"
-                }}
-              >
-                <Icon
-                  name="ios-close"
-                  type="ionicon"
-                  color="#000"
-                  size={30}
-                  iconStyle={{}}
-                />
-              </TouchableOpacity>
-            </View>
-          </View> */}
 
               {/* -------------------------------------------------------------------------- */
               /*                                Total charge                                */

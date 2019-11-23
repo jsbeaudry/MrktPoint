@@ -2,6 +2,7 @@ import React from "react";
 import {
   Platform,
   StatusBar,
+  StyleSheet,
   TouchableOpacity,
   ScrollView,
   View,
@@ -98,83 +99,8 @@ class Support extends React.Component {
               paddingBottom: this.marginHeight
             }}
           >
-            <View
-              style={{
-                marginRight: 80,
-                marginLeft: 20,
-                alignSelf: "flex-start"
-              }}
-            >
-              <View
-                style={{
-                  backgroundColor: "#E6E6E6",
-                  borderTopRightRadius: 15,
-                  borderBottomRightRadius: 15,
-                  borderBottomLeftRadius: 15
-                }}
-              >
-                <Text
-                  style={{
-                    padding: 10,
-                    fontSize: 13,
-                    lineHeight: 17,
-                    fontWeight: "400",
-                    color: "#404040"
-                  }}
-                >
-                  Hi Edddric. How can I help you? dhja hdgjashjh gjdgjasgdsa
-                  gjhgjdgas ghgsd ashdashj hjkas dhjaskd jhk AHKJSKAHD SKAHDUAS
-                  DIS AKH hd jsajgdj asgygjs dhasg hghjas saj g
-                </Text>
-              </View>
-              <Text
-                style={{
-                  paddingTop: 6,
-                  color: colors.grey,
-                  fontWeight: "bold"
-                }}
-              >
-                12:00
-              </Text>
-            </View>
-
-            <View
-              style={{ marginRight: 20, marginLeft: 80, alignSelf: "flex-end" }}
-            >
-              <View
-                style={{
-                  backgroundColor: colors.blue,
-                  borderTopRightRadius: 15,
-                  borderTopLeftRadius: 15,
-                  borderBottomRightRadius: 0,
-                  borderBottomLeftRadius: 15
-                }}
-              >
-                <Text
-                  style={{
-                    padding: 10,
-                    fontSize: 13,
-                    fontWeight: "400",
-                    lineHeight: 17,
-                    color: colors.white
-                  }}
-                >
-                  Hi Edddric. How can I help you? dhja hdgjashjh gjdgjasgdsa
-                  gjhgjdgas ghgsd ashdashj hjkas dhjaskd jhk AHKJSKAHD SKAHDUAS
-                  DIS AKH hd jsajgdj asgygjs dhasg hghjas saj g
-                </Text>
-              </View>
-              <Text
-                style={{
-                  paddingVertical: 6,
-                  color: colors.grey,
-                  fontWeight: "bold",
-                  alignSelf: "flex-end"
-                }}
-              >
-                12:00
-              </Text>
-            </View>
+            <Index />
+            <Index2 />
           </Animated.View>
         </ScrollView>
         <Animated.View
@@ -230,5 +156,107 @@ class Support extends React.Component {
     );
   }
 }
+
+function Index() {
+  return (
+    <View style={styles.container}>
+      <View style={styles.group5}>
+        <View style={styles.rectangle1}>
+          <Text style={styles.text1}>
+            How c hgj hj kh ahskd haskd ahdk ahd kan na hdasgdjg g g g asuhkj hk
+            haks hduksah jh hask h kashd ahsk dI do that?
+          </Text>
+        </View>
+      </View>
+      <Text style={styles.style3}>12:05</Text>
+    </View>
+  );
+}
+function Index2() {
+  return (
+    <View style={styles.container2}>
+      <View style={styles.group5}>
+        <View style={styles.rectangle2}>
+          <Text style={styles.text2}>
+            How c hgj hj kh ahskd haskd ahdk ahd kan na hdasgdjg g g g asuhkj hk
+            haks hduksah jh hask h kashd ahsk dI do that?
+          </Text>
+        </View>
+      </View>
+      <Text style={styles.style3}>12:05</Text>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    maxWidth: 250,
+    marginRight: 20,
+    alignSelf: "flex-end"
+  },
+  container2: {
+    maxWidth: 250,
+    marginLeft: 20,
+    alignSelf: "flex-start"
+  },
+  group5: {
+    maxWidth: 250
+  },
+  rectangle1: {
+    backgroundColor: "#0C4767",
+    borderTopLeftRadius: 15,
+    borderBottomRightRadius: 15,
+    borderBottomLeftRadius: 15,
+    paddingVertical: 5,
+    shadowOffset: {
+      height: 2,
+      width: -2
+    },
+    shadowColor: "rgba(0,0,0,0.1)",
+    shadowOpacity: 1,
+    shadowRadius: 5,
+    overflow: "hidden"
+  },
+  rectangle2: {
+    backgroundColor: "#E6E6E6",
+    borderTopRightRadius: 15,
+    borderBottomRightRadius: 15,
+    borderBottomLeftRadius: 15,
+    paddingVertical: 5,
+    shadowOffset: {
+      height: 2,
+      width: -2
+    },
+    shadowColor: "rgba(0,0,0,0.1)",
+    shadowOpacity: 1,
+    shadowRadius: 5,
+    overflow: "hidden"
+  },
+  rectangle65_imageStyle: {},
+  text1: {
+    backgroundColor: "transparent",
+    color: "#ffffff",
+    fontSize: 14,
+    textAlign: "right",
+    marginTop: 10,
+    marginHorizontal: 10
+  },
+  text2: {
+    backgroundColor: "transparent",
+    color: "#404040",
+    fontSize: 14,
+    textAlign: "right",
+    marginTop: 10,
+    marginHorizontal: 10
+  },
+  style3: {
+    backgroundColor: "transparent",
+    color: "rgba(35,35,35,1)",
+    opacity: 0.5,
+    fontSize: 10,
+    marginTop: 3,
+    alignSelf: "flex-end"
+  }
+});
 
 export default Support;

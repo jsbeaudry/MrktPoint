@@ -19,13 +19,19 @@ class Launch extends React.Component {
         if (!hasBoarded) {
           navigation.navigate("Intro");
         } else {
-          console.log(
-            Stitch.defaultAppClient.auth.activeUserAuthInfo.loggedInProviderType
-          );
-
+          // Stitch.defaultAppClient.auth.logoutUserWithId(
+          //   "5d3625aa8e88562010d2a3bb"
+          // );
+          // Stitch.defaultAppClient.auth.logoutUserWithId(
+          //   "5d3625aa8e88562010d2a3bb"
+          // );
+          //console.log(Stitch.defaultAppClient.auth.activeUserAuthInfo);
+          // Stitch.defaultAppClient.auth.switchToUserWithId(
+          //   "5d3625aa8e88562010d2a3bb"
+          // );
           if (
-            Stitch.defaultAppClient.auth.activeUserAuthInfo
-              .loggedInProviderType == "anon-user"
+            Stitch.defaultAppClient.auth.activeUserAuthInfo &&
+            Stitch.defaultAppClient.auth.activeUserAuthInfo.userId != undefined
           ) {
             this.props.navigation.navigate("Main");
           } else {

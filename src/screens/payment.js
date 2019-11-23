@@ -9,6 +9,7 @@ import {
   StatusBar,
   TouchableOpacity,
   ImageBackground,
+  ActivityIndicator,
   View
 } from "react-native";
 import Carousel from "react-native-snap-carousel";
@@ -81,11 +82,9 @@ class Payment extends React.Component {
     setTimeout(() => {
       this.state.cards.push({
         addNew: true,
-        swipp: 0
+        swipp: 0,
+        load: true
       });
-      this.setState(prevState => ({
-        cards: prevState.cards
-      }));
     }, 1000);
   }
   componentDidUpdate(prevState, prevProps) {
@@ -101,10 +100,10 @@ class Payment extends React.Component {
     return layoutMeasurement.height + contentOffset.y >= contentSize.height;
   };
   render() {
-    const { cards } = this.state;
+    const { load } = this.state;
     return (
       <Subscribe to={[StateContainer]}>
-        {container => (
+        {container =>
           <View style={{ flex: 1, backgroundColor: "#fff" }}>
             <StatusBar backgroundColor="#fff" barStyle="dark-content" />
 
@@ -141,215 +140,62 @@ class Payment extends React.Component {
             >
               Payment
             </Text>
-            <Carousel
-              data={cards}
-              slideStyle={{
-                marginHorizontal: 5,
-                marginTop: 20,
-                height: 320
-              }}
-              renderItem={({ item, index }) => {
-                if (!item.addNew) {
-                  return (
-                    <TouchableOpacity
-                      onLongPress={() => {
-                        Alert.alert(
-                          "Delete shipping address",
-                          "Do you really want remove this address?",
-                          [
-                            {
-                              text: "Cancel",
-                              onPress: () => console.log("Cancel Pressed"),
-                              style: "cancel"
-                            },
-                            {
-                              text: "Remove",
-                              onPress: () => {
-                                this.state.address.splice(index, 1);
-                                this.setState(
-                                  {
-                                    address: this.state.address
-                                  },
-                                  () => {
-                                    AsyncStorage.setItem(
-                                      "address",
-                                      JSON.stringify(address)
-                                    )
-                                      .then(() => {})
-                                      .catch(e => alert(e));
-                                  }
-                                );
-                              }
-                            }
-                          ],
-                          { cancelable: false }
-                        );
-                      }}
-                      onPress={() => {
-                        this.setState({
-                          selected: index,
-                          selectedItem: item
-                        });
-                      }}
-                      style={{
-                        borderWidth: 3,
-                        borderColor: "transparent",
-                        borderRadius: 20,
-                        height: heightCarousel,
-                        width: 210,
-                        justifyContent: "center",
-                        alignItems: "center"
-                      }}
-                    >
-                      <ImageBackground
-                        source={
-                          item.type == "visa"
-                            ? require(`../images/background2.png`)
-                            : require(`../images/background3.png`)
-                        }
-                        borderRadius={20}
-                        style={{
-                          marginHorizontal: 20,
-                          height: heightCarousel,
-                          width: 210,
-                          justifyContent: "center",
-                          alignItems: "center",
+            {load == false ? <ActivityIndicator /> : <View />}
+            {container.getCards().length == 0
+              ? <TouchableOpacity
+                  style={{
+                    height: heightCarousel,
+                    width: 210,
+                    marginTop: 20,
+                    justifyContent: "center",
+                    alignItems: "center",
 
-                          backgroundColor: "transparent",
-                          borderRadius: 20,
-                          alignSelf: "center"
-                        }}
-                        onPress={() => {
-                          this.props.navigation.navigate("Address");
-                        }}
-                      >
-                        <View
-                          style={{
-                            position: "absolute",
-                            top: 10,
-                            right: 10,
-                            flexDirection: "row",
-                            justifyContent: "center",
-                            alignItems: "center"
-                          }}
-                        >
-                          <Image
-                            source={
-                              item.type == "visa"
-                                ? require(`../images/visa_logo.png`)
-                                : require(`../images/mastercard_logo.png`)
-                            }
-                            style={{
-                              width: 60,
-                              resizeMode: "contain",
-                              borderColor: "#eee",
-                              borderWidth: 0
-                            }}
-                          />
-                        </View>
-                        <View
-                          style={{
-                            position: "absolute",
-                            bottom: 20,
-                            alignSelf: "center"
-                          }}
-                        >
-                          <Text
-                            style={{
-                              color: "#fff",
-                              fontSize: 15,
-                              fontWeight: "bold",
-                              marginBottom: 10
-                            }}
-                          >
-                            {item.card_number}
-                          </Text>
-                          <View
-                            style={{
-                              flexDirection: "row",
-                              justifyContent: "space-between",
-                              alignItems: "center"
-                            }}
-                          >
-                            <Text
-                              style={{
-                                color: "#fff",
-                                fontSize: 14
-                              }}
-                            >
-                              {item.card_fullname}
-                            </Text>
-                            <Text
-                              style={{
-                                color: "#fff",
-                                fontSize: 14
-                              }}
-                            >
-                              {item.card_expiry}
-                            </Text>
-                          </View>
-                        </View>
-                      </ImageBackground>
-                    </TouchableOpacity>
-                  );
-                } else {
-                  return (
-                    <TouchableOpacity
-                      style={{
-                        height: heightCarousel,
-                        width: 210,
-                        justifyContent: "center",
-                        alignItems: "center",
+                    backgroundColor: "transparent",
+                    borderRadius: 20,
+                    alignSelf: "center",
 
-                        backgroundColor: "transparent",
-                        borderRadius: 20,
-                        alignSelf: "center",
+                    borderWidth: 3,
+                    borderColor: "#D8D8D8"
+                  }}
+                  onPress={() => {
+                    this.props.navigation.navigate("AddCard");
+                  }}
+                >
+                  <TouchableOpacity
+                    style={{
+                      flex: 20,
+                      position: "absolute",
+                      top: 10,
+                      left: 10,
+                      justifyContent: "center",
+                      alignItems: "center"
+                    }}
+                    onPress={() => this.props.navigation.goBack()}
+                  >
+                    <Icon
+                      name={"ios-add"}
+                      type="ionicon"
+                      color={"#D8D8D8"}
+                      opacity={1}
+                      size={35}
+                      iconStyle={{}}
+                    />
+                  </TouchableOpacity>
+                  <Text
+                    style={{
+                      color: "#979797",
+                      fontSize: 18,
+                      fontWeight: "bold"
+                    }}
+                  >
+                    {"Add Address"}
+                  </Text>
+                </TouchableOpacity>
+              : <CarouselItems
+                  cards={container.getCards()}
+                  goto={this.props}
+                />}
 
-                        borderWidth: 3,
-                        borderColor: "#D8D8D8"
-                      }}
-                      onPress={() => {
-                        this.props.navigation.navigate("AddCard");
-                      }}
-                    >
-                      <TouchableOpacity
-                        style={{
-                          flex: 20,
-                          position: "absolute",
-                          top: 10,
-                          left: 10,
-                          justifyContent: "center",
-                          alignItems: "center"
-                        }}
-                        onPress={() => this.props.navigation.goBack()}
-                      >
-                        <Icon
-                          name={"ios-add"}
-                          type="ionicon"
-                          color={"#D8D8D8"}
-                          opacity={1}
-                          size={35}
-                          iconStyle={{}}
-                        />
-                      </TouchableOpacity>
-                      <Text
-                        style={{
-                          color: "#979797",
-                          fontSize: 18,
-                          fontWeight: "bold"
-                        }}
-                      >
-                        {"Add Address"}
-                      </Text>
-                    </TouchableOpacity>
-                  );
-                }
-              }}
-              sliderWidth={screenWidth}
-              sliderHeight={heightCarousel}
-              itemHeight={heightCarousel}
-              itemWidth={210}
-            />
             <View
               style={{
                 position: "absolute",
@@ -416,8 +262,7 @@ class Payment extends React.Component {
 
               <TouchableOpacity
                 style={{
-                  marginLeft:
-                    this.state.swipp < -3 ? (screenWidth - 100) / 2 : 0,
+                  marginLeft: this.state.swipp < -3 ? screenWidth / 2 : 0,
                   height: 50,
                   width: (screenWidth - 100) / 2,
                   justifyContent: "center",
@@ -453,8 +298,7 @@ class Payment extends React.Component {
                 </Text>
               </TouchableOpacity>
             </View>
-          </View>
-        )}
+          </View>}
       </Subscribe>
     );
   }
@@ -462,4 +306,228 @@ class Payment extends React.Component {
 
 export default Payment;
 
-const styles = StyleSheet.create({});
+class CarouselItems extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { cards: [] };
+  }
+  componentWillMount() {
+    setTimeout(() => {
+      this.setState({ cards: this.props.cards });
+    }, 100);
+  }
+
+  render() {
+    const { cards } = this.state;
+    return (
+      <Subscribe to={[StateContainer]}>
+        {container =>
+          <Carousel
+            data={cards}
+            slideStyle={{
+              marginHorizontal: 5,
+              marginTop: 20,
+              height: 320
+            }}
+            firstItem={0}
+            snapToStart={cards.length - 1}
+            onSnapToItem={index => {
+              if (cards[index] && cards[index].addNew == null)
+                container.addSelectCard(cards[index]);
+            }}
+            renderItem={({ item, index }) => {
+              if (!item.addNew) {
+                return (
+                  <TouchableOpacity
+                    onLongPress={() => {
+                      Alert.alert(
+                        "Delete shipping address",
+                        "Do you really want remove this address?",
+                        [
+                          {
+                            text: "Cancel",
+                            onPress: () => console.log("Cancel Pressed"),
+                            style: "cancel"
+                          },
+                          {
+                            text: "Remove",
+                            onPress: () => {
+                              this.state.cards.splice(index, 1);
+                              this.setState({
+                                cards: this.state.cards
+                              });
+                            }
+                          }
+                        ],
+                        { cancelable: false }
+                      );
+                    }}
+                    onPress={() => {
+                      this.setState({
+                        selected: index,
+                        selectedItem: item
+                      });
+                    }}
+                    style={{
+                      borderWidth: 3,
+                      borderColor: "transparent",
+                      borderRadius: 20,
+                      height: heightCarousel,
+                      width: 210,
+                      justifyContent: "center",
+                      alignItems: "center"
+                    }}
+                  >
+                    <ImageBackground
+                      source={
+                        item.type == "visa"
+                          ? require(`../images/background2.png`)
+                          : require(`../images/background3.png`)
+                      }
+                      borderRadius={20}
+                      style={{
+                        marginHorizontal: 20,
+                        height: heightCarousel,
+                        width: 210,
+                        justifyContent: "center",
+                        alignItems: "center",
+
+                        backgroundColor: "transparent",
+                        borderRadius: 20,
+                        alignSelf: "center"
+                      }}
+                      onPress={() => {
+                        this.props.navigation.navigate("Address");
+                      }}
+                    >
+                      <View
+                        style={{
+                          position: "absolute",
+                          top: 10,
+                          right: 10,
+                          flexDirection: "row",
+                          justifyContent: "center",
+                          alignItems: "center"
+                        }}
+                      >
+                        <Image
+                          source={
+                            item.type == "visa"
+                              ? require(`../images/visa_logo.png`)
+                              : require(`../images/mastercard_logo.png`)
+                          }
+                          style={{
+                            width: 60,
+                            resizeMode: "contain",
+                            borderColor: "#eee",
+                            borderWidth: 0
+                          }}
+                        />
+                      </View>
+                      <View
+                        style={{
+                          position: "absolute",
+                          bottom: 20,
+                          alignSelf: "center"
+                        }}
+                      >
+                        <Text
+                          style={{
+                            color: "#fff",
+                            fontSize: 15,
+                            fontWeight: "bold",
+                            marginBottom: 10
+                          }}
+                        >
+                          {item.card_number}
+                        </Text>
+                        <View
+                          style={{
+                            flexDirection: "row",
+                            justifyContent: "space-between",
+                            alignItems: "center"
+                          }}
+                        >
+                          <Text
+                            style={{
+                              color: "#fff",
+                              fontSize: 14
+                            }}
+                          >
+                            {item.card_fullname}
+                          </Text>
+                          <Text
+                            style={{
+                              color: "#fff",
+                              fontSize: 14
+                            }}
+                          >
+                            {item.card_expiry}
+                          </Text>
+                        </View>
+                      </View>
+                    </ImageBackground>
+                  </TouchableOpacity>
+                );
+              } else {
+                return (
+                  <TouchableOpacity
+                    style={{
+                      height: heightCarousel,
+                      width: 210,
+                      justifyContent: "center",
+                      alignItems: "center",
+
+                      backgroundColor: "transparent",
+                      borderRadius: 20,
+                      alignSelf: "center",
+
+                      borderWidth: 3,
+                      borderColor: "#D8D8D8"
+                    }}
+                    onPress={() => {
+                      this.props.navigation.navigate("AddCard");
+                    }}
+                  >
+                    <TouchableOpacity
+                      style={{
+                        flex: 20,
+                        position: "absolute",
+                        top: 10,
+                        left: 10,
+                        justifyContent: "center",
+                        alignItems: "center"
+                      }}
+                      onPress={() => this.props.navigation.goBack()}
+                    >
+                      <Icon
+                        name={"ios-add"}
+                        type="ionicon"
+                        color={"#D8D8D8"}
+                        opacity={1}
+                        size={35}
+                        iconStyle={{}}
+                      />
+                    </TouchableOpacity>
+                    <Text
+                      style={{
+                        color: "#979797",
+                        fontSize: 18,
+                        fontWeight: "bold"
+                      }}
+                    >
+                      {"AddCard"}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              }
+            }}
+            sliderWidth={screenWidth}
+            sliderHeight={heightCarousel}
+            itemHeight={heightCarousel}
+            itemWidth={210}
+          />}
+      </Subscribe>
+    );
+  }
+}
