@@ -1,21 +1,19 @@
 import React from "react";
 import {
-  StyleSheet,
   Platform,
-  Button,
   Text,
   Image,
   StatusBar,
-  ScrollView,
   TouchableOpacity,
   TextInput,
+  AsyncStorage,
   ActivityIndicator,
   View,
-  KeyboardAvoidingView,
-  DatePickerIOS,
-  DatePickerAndroid
+  DatePickerAndroid,
+  Animated,
+  Keyboard,
+  KeyboardAvoidingView
 } from "react-native";
-import { screenHeight } from "../utils/variables";
 import Icon from "react-native-vector-icons/Ionicons";
 import Constants from "expo-constants";
 import { colors } from "../utils/colors";
@@ -25,17 +23,33 @@ import { Formik } from "formik";
 import * as yup from "yup";
 import DateTimePicker from "react-native-modal-datetime-picker";
 import ModalPicker from "react-native-modal-picker";
-import { Stitch, BSON } from "mongodb-stitch-react-native-sdk";
+import { Stitch } from "mongodb-stitch-react-native-sdk";
 import { updateUser, getOne } from "../services";
 
+import { connect } from "react-redux";
+import { setUser } from "../redux/actions/user";
+
 const validationSchema = yup.object().shape({
-  firstname: yup.string().required().label("firstname"),
-  lastname: yup.string().required().label("lastname"),
-  email: yup.string().required().email().label("email"),
-  phone: yup.string().required().label("phone")
+  firstname: yup
+    .string()
+    .required()
+    .label("firstname"),
+  lastname: yup
+    .string()
+    .required()
+    .label("lastname"),
+  email: yup
+    .string()
+    .required()
+    .email()
+    .label("email"),
+  phone: yup
+    .string()
+    .required()
+    .label("phone")
 });
 
-class AddCard extends React.Component {
+class EditProfile extends React.Component {
   static navigationOptions = ({ navigation }) => {
     return {
       title: "Add Card Details",
@@ -70,14 +84,26 @@ class AddCard extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
+      MARGIN: 0,
       birthdate: new Date(),
       image: null,
       gender: "",
       user: {},
-      isDateTimePickerVisible: false
+      isDateTimePickerVisible: false,
+      newImage: false
     };
+    this.load("user");
+    this.imageHeight = new Animated.Value(0);
   }
   componentWillMount() {
+    this.keyboardWillShowSub = Keyboard.addListener(
+      "keyboardWillShow",
+      this.keyboardWillShow
+    );
+    this.keyboardWillHideSub = Keyboard.addListener(
+      "keyboardWillHide",
+      this.keyboardWillHide
+    );
     this.getPermissionAsync();
     let data_ = Stitch.defaultAppClient.auth.activeUserAuthInfo;
     if (
@@ -86,17 +112,18 @@ class AddCard extends React.Component {
     ) {
       getOne("users", { user_id: data_.userId })
         .then(results => {
-          console.log(results);
-
+          //console.log(results);
           this.setState(
             {
               user: results[0],
+              gender: results[0].gender ? results[0].gender : "",
               birthdate: results[0].birthdate
                 ? results[0].birthdate
                 : new Date(),
               image: results[0].image ? results[0].image : ""
             },
             () => {
+              this.save("user", this.state.user);
               //alert(JSON.stringify(this.state.user));
             }
           );
@@ -107,6 +134,47 @@ class AddCard extends React.Component {
     }
   }
 
+  componentWillUnmount() {
+    this.keyboardWillShowSub.remove();
+    this.keyboardWillHideSub.remove();
+  }
+
+  keyboardWillShow = event => {
+    Animated.timing(this.imageHeight, {
+      duration: event.duration,
+      toValue: this.state.MARGIN
+    }).start();
+  };
+
+  keyboardWillHide = event => {
+    Animated.timing(this.imageHeight, {
+      duration: event.duration,
+      toValue: 0
+    }).start();
+  };
+
+  load = async STORAGE_KEY => {
+    try {
+      const name = await AsyncStorage.getItem(STORAGE_KEY);
+
+      if (name !== null) {
+        this.setState({
+          user: JSON.parse(name),
+          gender: JSON.parse(name).gender,
+          image: JSON.parse(name).image
+        });
+      }
+    } catch (e) {
+      console.error("Failed to load .");
+    }
+  };
+  save = async (STORAGE_KEY, value) => {
+    try {
+      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(value));
+    } catch (e) {
+      console.error("Failed to save name.");
+    }
+  };
   showDateTimePicker = () => {
     this.setState({ isDateTimePickerVisible: true });
   };
@@ -141,13 +209,13 @@ class AddCard extends React.Component {
     //console.log(result.uri);
 
     if (!result.cancelled) {
-      this.setState({ image: result });
+      this.setState({ image: result, newImage: true });
     }
   };
 
   dateAdroid = async () => {
     try {
-      const { action, year, month, day } = await DatePickerAndroid.open({
+      const { action } = await DatePickerAndroid.open({
         // Use `new Date()` for current date.
         // May 25 2020. Month 0 is January.
         date: new Date(2020, 4, 25)
@@ -160,7 +228,8 @@ class AddCard extends React.Component {
     }
   };
   render() {
-    const { image, gender, birthdate, user } = this.state;
+    const { image, gender, birthdate } = this.state;
+    const { user } = this.props;
     let index = 0;
     const data = [
       // { key: index++, section: true, label: "Fruits" },
@@ -168,13 +237,17 @@ class AddCard extends React.Component {
       { key: index++, label: "Female" }
     ];
     return (
-      <ScrollView style={{ flex: 1, backgroundColor: "#fff" }}>
+      <Animated.ScrollView
+        style={{
+          flex: 1,
+          backgroundColor: "#fff",
+          marginTop: this.imageHeight
+        }}
+      >
         <StatusBar backgroundColor="#fff" barStyle="dark-content" />
         <KeyboardAvoidingView style={{}} behavior="padding" enabled>
           <View
             style={{
-              paddingTop: 100,
-              height: screenHeight,
               backgroundColor: "#fff",
               shadowColor: "#000",
               shadowOpacity: 0.1,
@@ -184,61 +257,11 @@ class AddCard extends React.Component {
                 height: 1,
                 width: 0
               },
-              margin: 20,
+              marginHorizontal: 20,
+              marginVertical: 100,
               borderRadius: 5
             }}
           >
-            <View
-              style={{
-                width: 150,
-                height: 150,
-                borderRadius: 75,
-                alignSelf: "center",
-                justifyContent: "center",
-                alignItems: "center",
-                backgroundColor: "#fff",
-                marginTop: -75,
-                shadowColor: "#777",
-                shadowOpacity: 0.14,
-                elevation: 1,
-                shadowRadius: 7,
-                shadowOffset: {
-                  height: 1,
-                  width: 0
-                }
-              }}
-            >
-              <Image
-                source={{
-                  uri: image
-                    ? `data:image/jpg;base64,${image.base64}`
-                    : "https://www.leisureopportunities.co.uk/images/995586_746594.jpg"
-                }}
-                borderRadius={142 / 2}
-                style={{
-                  width: 142,
-                  height: 142,
-                  alignSelf: "center"
-                }}
-              />
-              <TouchableOpacity
-                onPress={this._pickImage}
-                style={{
-                  position: "absolute",
-                  bottom: 5,
-                  right: 5,
-                  height: 40,
-                  width: 40,
-                  borderRadius: 20,
-                  backgroundColor: colors.blueDark,
-                  justifyContent: "center",
-                  alignItems: "center"
-                }}
-              >
-                <Icon name={"ios-camera"} size={30} color="#fff" />
-              </TouchableOpacity>
-            </View>
-
             <Formik
               enableReinitialize
               initialValues={{
@@ -247,11 +270,7 @@ class AddCard extends React.Component {
                 email: user.email ? user.email : "",
                 phone: user.phone ? user.phone : ""
               }}
-              onSubmit={(values, actions) => {
-                values.gender = gender;
-                (values._id = user.id), (values.email =
-                  user.email), (values.birthdate = birthdate);
-
+              onSubmit={values => {
                 updateUser(
                   "users",
                   { email: user.email },
@@ -266,35 +285,98 @@ class AddCard extends React.Component {
                 )
                   .then(results => {
                     console.log(results);
+                    this.props.setUser();
                   })
                   .catch(error => {
                     console.log(error);
                   });
-
-                //this.state.address.push(values);
-                //this._storeData("address",JSON.stringify(this.state.address));
-                // try {
-                //   AsyncStorage.setItem(
-                //     "address",
-                //     JSON.stringify(this.state.address)
-                //   );
-                // } catch (error) {
-                //   // Error saving data
-                // }
-                // container.addAddress(values);
-                // container.addSelectAddress(values);
-                // setTimeout(() => {
-                //   actions.setSubmitting(false);
-                //   this.props.navigation.goBack();
-                // }, 1000);
               }}
               validationSchema={validationSchema}
             >
-              {formikProps =>
+              {formikProps => (
                 <React.Fragment>
                   <View
                     style={{
-                      marginTop: 40,
+                      width: 150,
+                      height: 150,
+                      position: "absolute",
+                      top: -75,
+                      borderRadius: 75,
+                      alignSelf: "center",
+                      justifyContent: "center",
+                      alignItems: "center",
+                      backgroundColor: "#fff",
+
+                      shadowColor: "#777",
+                      shadowOpacity: 0.14,
+                      elevation: 1,
+                      shadowRadius: 7,
+                      shadowOffset: {
+                        height: 1,
+                        width: 0
+                      }
+                    }}
+                  >
+                    {user && user.image && this.state.newImage == false ? (
+                      <Image
+                        source={{
+                          uri: `data:image/jpg;base64,${user.image.base64}`
+                        }}
+                        borderRadius={142 / 2}
+                        style={{
+                          width: 142,
+                          height: 142,
+                          alignSelf: "center"
+                        }}
+                      />
+                    ) : this.state.newImage == true ? (
+                      <Image
+                        source={{
+                          uri: this.state.image.uri
+                        }}
+                        borderRadius={142 / 2}
+                        style={{
+                          width: 142,
+                          height: 142,
+                          alignSelf: "center"
+                        }}
+                      />
+                    ) : (
+                      <Image
+                        source={{
+                          uri:
+                            "https://www.leisureopportunities.co.uk/images/995586_746594.jpg"
+                        }}
+                        borderRadius={142 / 2}
+                        style={{
+                          width: 142,
+                          height: 142,
+                          alignSelf: "center"
+                        }}
+                      />
+                    )}
+
+                    <TouchableOpacity
+                      onPress={this._pickImage}
+                      style={{
+                        position: "absolute",
+                        bottom: 5,
+                        right: 5,
+                        height: 40,
+                        width: 40,
+                        borderRadius: 20,
+                        backgroundColor: colors.blueDark,
+                        justifyContent: "center",
+                        alignItems: "center"
+                      }}
+                    >
+                      <Icon name={"ios-camera"} size={30} color="#fff" />
+                    </TouchableOpacity>
+                  </View>
+
+                  <View
+                    style={{
+                      marginTop: 90,
                       marginVertical: 10,
                       marginHorizontal: 20,
                       flexDirection: "row",
@@ -313,7 +395,6 @@ class AddCard extends React.Component {
                       {"First name"}
                     </Text>
                     <TextInput
-                      autoCorrect={false}
                       returnKeyType={"done"}
                       placeholder={""}
                       value={formikProps.values.firstname}
@@ -463,6 +544,7 @@ class AddCard extends React.Component {
                     </Text>
                     <TextInput
                       autoCorrect={false}
+                      onFocus={() => this.setState({ MARGIN: -100 })}
                       returnKeyType={"done"}
                       placeholder={""}
                       value={formikProps.values.phone}
@@ -541,7 +623,9 @@ class AddCard extends React.Component {
                     initValue={user.gender ? user.gender : ""}
                     onChange={option => {
                       this.setState({ gender: option.label });
-                      //alert(`${option.label} (${option.key}) nom nom nom`);
+                      console.log(
+                        `${option.label} (${option.key}) nom nom nom`
+                      );
                     }}
                   />
                   <TouchableOpacity
@@ -588,56 +672,64 @@ class AddCard extends React.Component {
                     onConfirm={this.handleDatePicked}
                     onCancel={this.hideDateTimePicker}
                   />
-                  {formikProps.isSubmitting
-                    ? <ActivityIndicator
-                        color={"#000"}
+                  {formikProps.isSubmitting ? (
+                    <ActivityIndicator
+                      color={"#000"}
+                      style={{
+                        position: "absolute",
+                        bottom: 30,
+                        alignSelf: "center",
+                        justifyContent: "center",
+                        alignItems: "center"
+                      }}
+                    />
+                  ) : (
+                    <View
+                      style={{
+                        alignSelf: "center",
+                        justifyContent: "center",
+                        alignItems: "center",
+                        marginTop: 10
+                      }}
+                    >
+                      <TouchableOpacity
                         style={{
-                          position: "absolute",
-                          bottom: 30,
-                          alignSelf: "center",
+                          height: 53,
+                          width: 305,
+                          marginBottom: 40,
                           justifyContent: "center",
-                          alignItems: "center"
-                        }}
-                      />
-                    : <View
-                        style={{
-                          position: "absolute",
-                          bottom: 0,
-                          alignSelf: "center",
-                          justifyContent: "center",
-                          alignItems: "center"
-                        }}
-                      >
-                        <TouchableOpacity
-                          style={{
-                            height: 53,
-                            width: 305,
-                            justifyContent: "center",
-                            alignItems: "center",
-                            backgroundColor: "#0C4767",
-                            borderRadius: 26.52,
+                          alignItems: "center",
+                          backgroundColor: "#0C4767",
+                          borderRadius: 26.52,
 
-                            marginVertical: 10
+                          marginVertical: 10
+                        }}
+                        onPress={formikProps.handleSubmit}
+                      >
+                        <Text
+                          style={{
+                            fontSize: 15,
+                            color: "#fff"
                           }}
-                          onPress={formikProps.handleSubmit}
                         >
-                          <Text
-                            style={{
-                              fontSize: 15,
-                              color: "#fff"
-                            }}
-                          >
-                            {"SAVE"}
-                          </Text>
-                        </TouchableOpacity>
-                      </View>}
-                </React.Fragment>}
+                          {"SAVE"}
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
+                  )}
+                </React.Fragment>
+              )}
             </Formik>
           </View>
         </KeyboardAvoidingView>
-      </ScrollView>
+      </Animated.ScrollView>
     );
   }
 }
 
-export default AddCard;
+const mapStateToProps = state => {
+  const { user } = state.user;
+  return { user };
+};
+
+export default connect(mapStateToProps, { setUser })(EditProfile);

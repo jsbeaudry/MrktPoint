@@ -3,6 +3,8 @@ import { Image, StatusBar, View, AsyncStorage } from "react-native";
 import { hp } from "../utils/variables";
 import { Stitch } from "mongodb-stitch-react-native-sdk";
 import { stitchConfig } from "../services/stitch";
+import { connect } from "react-redux";
+import { setUser } from "../redux/actions/user";
 class Launch extends React.Component {
   constructor(props) {
     super(props);
@@ -19,21 +21,12 @@ class Launch extends React.Component {
         if (!hasBoarded) {
           navigation.navigate("Intro");
         } else {
-          // Stitch.defaultAppClient.auth.logoutUserWithId(
-          //   "5d3625aa8e88562010d2a3bb"
-          // );
-          // Stitch.defaultAppClient.auth.logoutUserWithId(
-          //   "5d3625aa8e88562010d2a3bb"
-          // );
-          //console.log(Stitch.defaultAppClient.auth.activeUserAuthInfo);
-          // Stitch.defaultAppClient.auth.switchToUserWithId(
-          //   "5d3625aa8e88562010d2a3bb"
-          // );
           if (
             Stitch.defaultAppClient.auth.activeUserAuthInfo &&
             Stitch.defaultAppClient.auth.activeUserAuthInfo.userId != undefined
           ) {
-            this.props.navigation.navigate("Main");
+            this.props.setUser();
+            this.props.navigation.navigate("Signin");
           } else {
             this.props.navigation.navigate("Signin");
           }
@@ -49,6 +42,7 @@ class Launch extends React.Component {
     return (
       <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
         <StatusBar barStyle="default" />
+
         <Image
           source={require("../images/logo2.png")}
           style={{
@@ -73,4 +67,8 @@ class Launch extends React.Component {
   }
 }
 
-export default Launch;
+const mapStateToProps = state => {
+  const { user } = state.user;
+  return { user };
+};
+export default connect(mapStateToProps, { setUser })(Launch);

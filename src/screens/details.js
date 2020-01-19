@@ -5,6 +5,7 @@ import {
   Platform,
   ScrollView,
   Text,
+  AsyncStorage,
   StatusBar,
   Image,
   TouchableOpacity,
@@ -12,11 +13,8 @@ import {
   View
 } from "react-native";
 import Swiper from "react-native-swiper";
-import { Icon } from "../utils/icons";
 import { scale, verticalScale, moderateScale } from "react-native-size-matters";
-import { Subscribe } from "unstated";
 import { colors } from "../utils/colors";
-import { Product } from "../utils/class";
 import {
   STATUS_BAR_HEIGHT,
   HEADER_HEIGHT,
@@ -26,17 +24,19 @@ import {
   formatNumber
 } from "../utils/variables";
 import Modal from "react-native-modal";
-import { StateContainer } from "../utils/stateContainer";
 import { Ionicons } from "@expo/vector-icons";
-import { bold } from "ansi-colors";
 const imAddBag = require("../images/successAdd.png");
+import { BSON } from "mongodb-stitch-react-native-sdk";
 
-const mystates = new StateContainer({
-  orders: []
-});
+import { getOne, addData, deleteOne, update } from "../services/stitch";
 
+import { connect } from "react-redux";
+import { addItem, setCarts } from "../redux/actions/bags";
+import { setUser } from "../redux/actions/user";
+const ObjectId = BSON.ObjectId;
+let prod = null;
 class Details extends React.Component {
-  static navigationOptions = ({ navigation }) => {
+  static navigationOptions = () => {
     return {
       header: null
     };
@@ -45,23 +45,60 @@ class Details extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
+      bags: [],
+      user: {},
       count: 1,
-      product: this.props.navigation.getParam("product", new Product()),
+      product: {},
+      asset: {},
       top: -88,
       currentValue: 0,
       isDisabled: false,
-      isModalVisible: false
+      isModalVisible: false,
+      like_product: "grey"
     };
+    prod = this.props.navigation.getParam("product", {});
   }
   toggleModal = () => {
     this.setState(prevState => ({ isModalVisible: !prevState.isModalVisible }));
   };
   componentWillMount() {
+    this.props.setCarts();
+  }
+  componentDidMount() {
+    //set if product has been like
+    this.setState({
+      like_product:
+        this.props.user.wishlist.filter(
+          i => i.productId == prod.productId.toString()
+        ).length > 0
+          ? "red"
+          : "grey"
+    });
     this.props.navigation.setParams({
       fadeValue: 0
     });
-    //alert(mystates.getItems().length);
-    //console.log(mystates);
+    this.setState(
+      { asset: this.props.navigation.getParam("business", {}) },
+      () => {}
+    );
+
+    getOne("products", { _id: prod.productId })
+      .then(results => {
+        results[0].price = results[0].price ? results[0].price : 0.0;
+        this.setState(
+          {
+            product: results[0]
+          },
+          () => {}
+        );
+      })
+      .catch(error => {
+        console.log(error);
+
+        this.setState({
+          product: {}
+        });
+      });
   }
 
   _start = a => {
@@ -82,776 +119,887 @@ class Details extends React.Component {
     return layoutMeasurement.height + contentOffset.y >= contentSize.height;
   };
 
+  // load = async STORAGE_KEY => {
+  //   try {
+  //     const name = await AsyncStorage.getItem(STORAGE_KEY);
+
+  //     if (name !== null) {
+  //       //console.log(JSON.parse(name));
+  //       this.setState({
+  //         bags: JSON.parse(name)
+  //       });
+  //     }
+  //   } catch (e) {
+  //     console.error("Failed to load .");
+  //   }
+  // };
+
+  // save = async (STORAGE_KEY, value) => {
+  //   try {
+  //     await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(value));
+
+  //     this.load("bags");
+  //   } catch (e) {
+  //     console.error("Failed to save name.");
+  //   }
+  // };
+
+  like = () => {
+    this.setState(
+      {
+        like_product: this.state.like_product == "grey" ? "red" : "grey"
+      },
+      () => {
+        if (
+          this.props.user.wishlist.filter(
+            i => i.productId == prod.productId.toString()
+          ).length == 0
+        ) {
+          let data = {
+            custumerId: this.props.user.user_id,
+            productId: prod.productId,
+            assetId: new ObjectId(this.state.product.asset.id),
+            createAdt: new Date()
+          };
+
+          addData("favorites_products", data)
+            .then(() => {
+              this.props.setUser();
+            })
+            .catch(error => {
+              console.log(error);
+            });
+        } else {
+          deleteOne("favorites_products", {
+            custumerId: this.props.user.user_id,
+            productId: prod.productId
+          })
+            .then(() => {
+              this.props.setUser();
+            })
+            .catch(error => {
+              console.log(error);
+            });
+        }
+      }
+    );
+  };
+
   render() {
     const { product } = this.state;
     return (
-      <Subscribe to={[StateContainer]}>
-        {container =>
-          <View style={{ flex: 1, paddingBottom: 20 }}>
-            <StatusBar backgroundColor="blue" barStyle="dark-content" />
+      <View style={{ flex: 1, paddingBottom: 20 }}>
+        <StatusBar backgroundColor="blue" barStyle="dark-content" />
 
-            <Animated.View
+        <Animated.View
+          style={{
+            width: screenWidth,
+            height: HEADER_HEIGHT,
+            paddingTop: STATUS_BAR_HEIGHT,
+            position: "absolute",
+            right: 0,
+            zIndex: 999,
+            flexDirection: "row",
+            backgroundColor: `rgba(256,256,256,${this.state.fadeValue})`,
+            paddingHorizontal: 15
+          }}
+        >
+          <TouchableOpacity
+            style={{
+              flex: 20,
+              backgroundColor: "transparent",
+              justifyContent: "center",
+              alignItems: "flex-start"
+            }}
+            onPress={() => this.props.navigation.goBack()}
+          >
+            <Ionicons
+              name={Platform.OS === "ios" ? "ios-arrow-back" : "md-arrow-back"}
+              type="ionicon"
+              color="#000"
+              size={moderateScale(30, scaleIndice)}
+              iconStyle={{}}
+            />
+          </TouchableOpacity>
+          <View
+            style={{
+              flex: 60,
+              backgroundColor: "transparent",
+              justifyContent: "center",
+              alignItems: "center"
+            }}
+          >
+            {prod != null && prod.name ? (
+              <Text
+                style={{
+                  color: "#000",
+                  opacity: 1,
+                  fontSize: moderateScale(16, scaleIndice),
+                  fontWeight: "600"
+                }}
+              >
+                {prod.name.length <= 17
+                  ? prod.name
+                  : prod.name.substring(0, 17) + "..."}
+              </Text>
+            ) : null}
+          </View>
+          <View
+            style={{
+              flex: 20,
+              backgroundColor: "transparent",
+              justifyContent: "center",
+              alignItems: "center",
+              flexDirection: "row"
+            }}
+          >
+            <TouchableOpacity
               style={{
-                width: screenWidth,
-                height: HEADER_HEIGHT,
-                paddingTop: STATUS_BAR_HEIGHT,
-                position: "absolute",
-                right: 0,
-                zIndex: 999,
-                flexDirection: "row",
-                backgroundColor: `rgba(256,256,256,${this.state.fadeValue})`,
-                paddingHorizontal: 15
+                height: moderateScale(30, scaleIndice),
+                width: moderateScale(30, scaleIndice)
+              }}
+              onPress={() => {}}
+            />
+            <TouchableOpacity
+              style={{
+                height: moderateScale(30, scaleIndice),
+                width: moderateScale(30, scaleIndice),
+                marginTop: moderateScale(5, scaleIndice),
+                marginRight: moderateScale(10, scaleIndice),
+                backgroundColor: "#fff",
+                borderRadius: moderateScale(15, scaleIndice),
+                justifyContent: "center",
+                alignItems: "center"
+              }}
+              onPress={() => {
+                this.like();
               }}
             >
-              <TouchableOpacity
-                style={{
-                  flex: 20,
-                  backgroundColor: "transparent",
-                  justifyContent: "center",
-                  alignItems: "flex-start"
-                }}
-                onPress={() => this.props.navigation.goBack()}
-              >
-                <Ionicons
-                  name={
-                    Platform.OS === "ios" ? "ios-arrow-back" : "md-arrow-back"
-                  }
-                  type="ionicon"
-                  color="#000"
-                  size={moderateScale(30, scaleIndice)}
-                  iconStyle={{}}
-                />
-              </TouchableOpacity>
-              <View
-                style={{
-                  flex: 60,
-                  backgroundColor: "transparent",
-                  justifyContent: "center",
-                  alignItems: "center"
-                }}
-              >
-                <Text
-                  style={{
-                    color: "#000",
-                    opacity: 1,
-                    fontSize: moderateScale(16, scaleIndice),
-                    fontWeight: "600"
-                  }}
-                >
-                  {this.props.navigation.getParam("product", new Product()).name
-                    .length <= 17
-                    ? this.props.navigation.getParam("product", new Product())
-                        .name
-                    : this.props.navigation
-                        .getParam("product", new Product())
-                        .name.substring(0, 17) + "..."}
-                </Text>
-              </View>
-              <View
-                style={{
-                  flex: 20,
-                  backgroundColor: "transparent",
-                  justifyContent: "center",
-                  alignItems: "center",
-                  flexDirection: "row"
-                }}
-              >
-                <TouchableOpacity
-                  style={{
-                    height: moderateScale(30, scaleIndice),
-                    width: moderateScale(30, scaleIndice)
-                  }}
-                  onPress={() => {}}
-                />
-                <TouchableOpacity
-                  style={{
-                    height: moderateScale(30, scaleIndice),
-                    width: moderateScale(30, scaleIndice),
-                    marginTop: moderateScale(5, scaleIndice),
-                    marginRight: moderateScale(10, scaleIndice),
-                    backgroundColor: "#fff",
-                    borderRadius: moderateScale(15, scaleIndice),
-                    justifyContent: "center",
-                    alignItems: "center"
-                  }}
-                  onPress={() => {}}
-                >
-                  <Ionicons
-                    name="ios-heart"
-                    type="ionicon"
-                    color="red"
-                    size={moderateScale(20, scaleIndice)}
-                    iconStyle={{ marginTop: moderateScale(5, scaleIndice) }}
-                  />
-                </TouchableOpacity>
-              </View>
-            </Animated.View>
-            <Animated.View
-              style={{
-                opacity: this.state.fadeValue ? this.state.fadeValue : 0,
-                width: screenWidth,
-                height: HEADER_HEIGHT,
-                paddingTop: STATUS_BAR_HEIGHT,
-                position: "absolute",
-                right: 0,
-                zIndex: 999,
-                flexDirection: "row",
-                backgroundColor: "#FFFFFF",
-                paddingHorizontal: 15,
+              <Ionicons
+                name="ios-heart"
+                type="ionicon"
+                color={this.state.like_product}
+                size={moderateScale(20, scaleIndice)}
+                iconStyle={{ marginTop: moderateScale(5, scaleIndice) }}
+              />
+            </TouchableOpacity>
+          </View>
+        </Animated.View>
+        <Animated.View
+          style={{
+            opacity: this.state.fadeValue ? this.state.fadeValue : 0,
+            width: screenWidth,
+            height: HEADER_HEIGHT,
+            paddingTop: STATUS_BAR_HEIGHT,
+            position: "absolute",
+            right: 0,
+            zIndex: 999,
+            flexDirection: "row",
+            backgroundColor: "#FFFFFF",
+            paddingHorizontal: 15,
 
-                shadowColor: "#000000",
-                shadowOpacity: 0.2,
-                elevation: 2,
-                shadowRadius: 7,
-                shadowOffset: {
-                  height: 2,
-                  width: 0
-                }
+            shadowColor: "#000000",
+            shadowOpacity: 0.2,
+            elevation: 2,
+            shadowRadius: 7,
+            shadowOffset: {
+              height: 2,
+              width: 0
+            }
+          }}
+        >
+          <TouchableOpacity
+            style={{
+              flex: 20,
+              backgroundColor: "transparent",
+              justifyContent: "center",
+              alignItems: "flex-start"
+            }}
+            onPress={() => this.props.navigation.goBack()}
+          >
+            <Ionicons
+              name={Platform.OS === "ios" ? "ios-arrow-back" : "md-arrow-back"}
+              type="ionicon"
+              color="#000"
+              size={moderateScale(30, scaleIndice)}
+              iconStyle={{}}
+            />
+          </TouchableOpacity>
+          <View
+            style={{
+              flex: 60,
+              backgroundColor: "transparent",
+              justifyContent: "center",
+              alignItems: "center"
+            }}
+          >
+            {prod != null && prod.name ? (
+              <Text
+                style={{
+                  color: "#000",
+                  opacity: 1,
+                  fontSize: moderateScale(16, scaleIndice),
+                  fontWeight: "600"
+                }}
+              >
+                {prod.name.length <= 17
+                  ? prod.name
+                  : prod.name.substring(0, 17) + "..."}
+              </Text>
+            ) : null}
+          </View>
+          <View
+            style={{
+              flex: 20,
+              backgroundColor: "transparent",
+              justifyContent: "center",
+              alignItems: "center",
+              flexDirection: "row"
+            }}
+          >
+            <TouchableOpacity
+              style={{
+                height: moderateScale(30, scaleIndice),
+                width: moderateScale(30, scaleIndice)
+              }}
+              onPress={() => {}}
+            />
+            <TouchableOpacity
+              style={{
+                height: moderateScale(30, scaleIndice),
+                width: moderateScale(30, scaleIndice),
+                marginTop: moderateScale(5, scaleIndice),
+                marginRight: moderateScale(10, scaleIndice),
+                backgroundColor: "#fff",
+                borderRadius: moderateScale(15, scaleIndice),
+                justifyContent: "center",
+                alignItems: "center"
+              }}
+              onPress={() => {
+                this.like();
               }}
             >
-              <TouchableOpacity
-                style={{
-                  flex: 20,
-                  backgroundColor: "transparent",
-                  justifyContent: "center",
-                  alignItems: "flex-start"
-                }}
-                onPress={() => this.props.navigation.goBack()}
-              >
-                <Ionicons
-                  name={
-                    Platform.OS === "ios" ? "ios-arrow-back" : "md-arrow-back"
-                  }
-                  type="ionicon"
-                  color="#000"
-                  size={moderateScale(30, scaleIndice)}
-                  iconStyle={{}}
-                />
-              </TouchableOpacity>
-              <View
-                style={{
-                  flex: 60,
-                  backgroundColor: "transparent",
-                  justifyContent: "center",
-                  alignItems: "center"
-                }}
-              >
-                <Text
-                  style={{
-                    color: "#000",
-                    opacity: 1,
-                    fontSize: moderateScale(16, scaleIndice),
-                    fontWeight: "600"
-                  }}
-                >
-                  {this.props.navigation.getParam("product", new Product()).name
-                    .length <= 17
-                    ? this.props.navigation.getParam("product", new Product())
-                        .name
-                    : this.props.navigation
-                        .getParam("product", new Product())
-                        .name.substring(0, 17) + "..."}
-                </Text>
-              </View>
-              <View
-                style={{
-                  flex: 20,
-                  backgroundColor: "transparent",
-                  justifyContent: "center",
-                  alignItems: "center",
-                  flexDirection: "row"
-                }}
-              >
-                <TouchableOpacity
-                  style={{
-                    height: moderateScale(30, scaleIndice),
-                    width: moderateScale(30, scaleIndice)
-                  }}
-                  onPress={() => {}}
-                />
-                <TouchableOpacity
-                  style={{
-                    height: moderateScale(30, scaleIndice),
-                    width: moderateScale(30, scaleIndice),
-                    marginTop: moderateScale(5, scaleIndice),
-                    marginRight: moderateScale(10, scaleIndice),
-                    backgroundColor: "#fff",
-                    borderRadius: moderateScale(15, scaleIndice),
-                    justifyContent: "center",
-                    alignItems: "center"
-                  }}
-                  onPress={() => {}}
-                >
-                  <Ionicons
-                    name="ios-heart"
-                    type="ionicon"
-                    color="red"
-                    size={moderateScale(20, scaleIndice)}
-                    iconStyle={{ marginTop: moderateScale(5, scaleIndice) }}
-                  />
-                </TouchableOpacity>
-              </View>
-            </Animated.View>
+              <Ionicons
+                name="ios-heart"
+                type="ionicon"
+                color={this.state.like_product}
+                size={moderateScale(20, scaleIndice)}
+                iconStyle={{ marginTop: moderateScale(5, scaleIndice) }}
+              />
+            </TouchableOpacity>
+          </View>
+        </Animated.View>
 
+        <View
+          style={{
+            position: "absolute",
+            bottom: 0,
+            left: 0,
+            height: 110,
+            width: screenWidth,
+            backgroundColor: "#fff",
+            zIndex: 9999,
+            paddingTop: 20,
+            shadowColor: "#000000",
+            shadowOpacity: 0.2,
+            elevation: 2,
+            shadowRadius: 7,
+            shadowOffset: {
+              height: 2,
+              width: 0
+            }
+          }}
+        >
+          <View
+            style={{
+              paddingTop: 20,
+              justifyContent: "center",
+              alignItems: "center",
+              position: "absolute",
+              bottom: 30,
+              left: 5
+            }}
+          >
+            <Text
+              style={{
+                fontSize: 15
+              }}
+            >
+              Quantity:
+            </Text>
             <View
               style={{
-                position: "absolute",
-                bottom: 0,
-                left: 0,
-                height: 110,
-                width: screenWidth,
-                backgroundColor: "#fff",
-                zIndex: 9999,
-                paddingTop: 20,
-                shadowColor: "#000000",
-                shadowOpacity: 0.2,
-                elevation: 2,
-                shadowRadius: 7,
-                shadowOffset: {
-                  height: 2,
-                  width: 0
-                }
+                justifyContent: "center",
+                alignItems: "center",
+                margin: 10,
+                paddingLeft: 10,
+                paddingRight: 10,
+                width: scale(100),
+                height: verticalScale(30),
+                borderRadius: 15,
+                backgroundColor: "#f3f5f9",
+
+                flexDirection: "row"
               }}
             >
-              <View
-                style={{
-                  paddingTop: 20,
-                  justifyContent: "center",
-                  alignItems: "center",
-                  position: "absolute",
-                  bottom: 30,
-                  left: 5
-                }}
-              >
-                <Text
-                  style={{
-                    fontSize: 15
-                  }}
-                >
-                  Quantity:
-                </Text>
-                <View
-                  style={{
-                    justifyContent: "center",
-                    alignItems: "center",
-                    margin: 10,
-                    paddingLeft: 10,
-                    paddingRight: 10,
-                    width: scale(100),
-                    height: verticalScale(30),
-                    borderRadius: 15,
-                    backgroundColor: "#f3f5f9",
-
-                    flexDirection: "row"
-                  }}
-                >
-                  <TouchableOpacity
-                    style={{
-                      height: verticalScale(30),
-                      width: 40,
-                      justifyContent: "center",
-                      alignItems: "center"
-                    }}
-                    onPress={() => {
-                      if (this.state.count > 1) {
-                        this.setState(prevState => ({
-                          count: prevState.count - 1
-                        }));
-                      }
-                    }}
-                  >
-                    <Text
-                      sstyle={{
-                        height: verticalScale(10),
-                        width: scale(10),
-                        backgroundColor: "#535bfe"
-                      }}
-                    >
-                      -
-                    </Text>
-                  </TouchableOpacity>
-                  <Text
-                    style={{
-                      width: scale(20),
-                      color: "#535bfe",
-                      fontSize: scale(15),
-                      fontWeight: "500",
-                      letterSpacing: -0.36,
-                      lineHeight: scale(22),
-                      textAlign: "center"
-                    }}
-                  >
-                    {this.state.count}
-                  </Text>
-                  <TouchableOpacity
-                    style={{
-                      height: verticalScale(30),
-                      width: 40,
-                      justifyContent: "center",
-                      alignItems: "center"
-                    }}
-                    onPress={() => {
-                      if (this.state.count < 20) {
-                        this.setState(prevState => ({
-                          count: prevState.count + 1
-                        }));
-                      }
-                    }}
-                  >
-                    <Text
-                      sstyle={{
-                        height: verticalScale(10),
-                        width: scale(10),
-                        backgroundColor: "#535bfe"
-                      }}
-                    >
-                      +
-                    </Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
               <TouchableOpacity
                 style={{
-                  height: 47,
-
+                  height: verticalScale(30),
+                  width: 40,
                   justifyContent: "center",
-                  alignItems: "center",
-                  backgroundColor: "#0C4767",
-                  borderRadius: 26.52,
-                  position: "absolute",
-                  right: 15,
-                  bottom: 40
+                  alignItems: "center"
                 }}
                 onPress={() => {
-                  this.toggleModal();
-                  product.count = this.state.count;
-                  container.addItem(product);
+                  if (this.state.count > 1) {
+                    this.setState(prevState => ({
+                      count: prevState.count - 1
+                    }));
+                  }
                 }}
               >
                 <Text
-                  style={{
-                    fontSize: 15,
-                    paddingHorizontal: 15,
-                    color: "#fff"
+                  sstyle={{
+                    height: verticalScale(10),
+                    width: scale(10),
+                    backgroundColor: "#535bfe"
                   }}
                 >
-                  {`Add to Bag (${formatNumber(
-                    this.state.count * product.price
-                  )})`}
+                  -
+                </Text>
+              </TouchableOpacity>
+              <Text
+                style={{
+                  width: scale(20),
+                  color: "#535bfe",
+                  fontSize: scale(15),
+                  fontWeight: "500",
+                  letterSpacing: -0.36,
+                  lineHeight: scale(22),
+                  textAlign: "center"
+                }}
+              >
+                {this.state.count}
+              </Text>
+              <TouchableOpacity
+                style={{
+                  height: verticalScale(30),
+                  width: 40,
+                  justifyContent: "center",
+                  alignItems: "center"
+                }}
+                onPress={() => {
+                  if (this.state.count < 20) {
+                    this.setState(prevState => ({
+                      count: prevState.count + 1
+                    }));
+                  }
+                }}
+              >
+                <Text
+                  sstyle={{
+                    height: verticalScale(10),
+                    width: scale(10),
+                    backgroundColor: "#535bfe"
+                  }}
+                >
+                  +
                 </Text>
               </TouchableOpacity>
             </View>
-            <ScrollView
+          </View>
+          <TouchableOpacity
+            style={{
+              height: 47,
+
+              justifyContent: "center",
+              alignItems: "center",
+              backgroundColor: "#0C4767",
+              borderRadius: 26.52,
+              position: "absolute",
+              right: 15,
+              bottom: 40
+            }}
+            onPress={() => {
+              this.toggleModal();
+              let isNew = true;
+
+              for (let index = 0; index < this.props.carts.length; index++) {
+                const element = this.props.carts[index];
+                if (element._id.toString() == product._id.toString()) {
+                  isNew = false;
+                  this.props.carts[index].count =
+                    this.props.carts[index].count + this.state.count;
+                  break;
+                }
+              }
+              if (isNew == true) {
+                product.count = this.state.count;
+                product.assetName = this.state.asset.name;
+                product.assetCurrency = this.state.asset.currency;
+                product.assetRate = this.state.asset.all.rate;
+                this.props.carts.push(product);
+              }
+
+              //this.props.addItem(product);
+
+              update(
+                "bags",
+                { custumerId: this.props.user.user_id },
+                { products: this.props.carts }
+              )
+                .then(() => {
+                  this.props.setCarts();
+                })
+                .catch(error => {
+                  console.log(error);
+                });
+            }}
+          >
+            {this.state.asset &&
+            this.state.asset.currency &&
+            product.currency ? (
+              <Text
+                style={{
+                  fontSize: 15,
+                  paddingHorizontal: 15,
+                  color: "#fff"
+                }}
+              >
+                {`Add to Bag (${formatNumber(
+                  this.state.count *
+                    product.price *
+                    (this.state.asset.currency.toUpperCase() ==
+                    product.currency.toUpperCase()
+                      ? 1
+                      : this.state.asset.all.rate.value),
+                  this.state.asset.currency
+                )})`}
+              </Text>
+            ) : null}
+          </TouchableOpacity>
+        </View>
+
+        {this.state.product.name ? (
+          <ScrollView
+            style={{
+              zIndex: 1,
+              width: screenWidth,
+              backgroundColor: "transparent",
+              marginBottom: 70
+            }}
+            bounces={false}
+            onScroll={({ nativeEvent }) => {
+              this.isCloseToBottom(nativeEvent);
+            }}
+            scrollEventThrottle={screenHeight}
+            showsVerticalScrollIndicator={false}
+          >
+            <View
               style={{
-                zIndex: 1,
-                width: screenWidth,
-                backgroundColor: "transparent"
+                alignSelf: "center",
+                justifyContent: "center",
+                paddingTop: moderateScale(30, scaleIndice),
+                width: screenWidth
               }}
-              bounces={false}
-              onScroll={({ nativeEvent }) => {
-                this.isCloseToBottom(nativeEvent);
-              }}
-              scrollEventThrottle={screenHeight}
-              showsVerticalScrollIndicator={false}
             >
               <View
                 style={{
-                  alignSelf: "center",
-                  justifyContent: "center",
-                  paddingTop: moderateScale(30, scaleIndice),
-                  width: screenWidth
+                  marginBottom:
+                    this.state.currentValue < 185
+                      ? -this.state.currentValue / 8
+                      : -185 / 8
+                }}
+              >
+                <SliderRadius
+                  margin={5}
+                  data={product.pictures ? product.pictures : []}
+                  height={400}
+                />
+              </View>
+              <View
+                style={{
+                  flex: 1,
+                  minHeight: screenHeight,
+                  padding: moderateScale(40, scaleIndice),
+                  backgroundColor: "#fff",
+                  borderTopLeftRadius: moderateScale(30, scaleIndice),
+                  borderTopRightRadius: moderateScale(30, scaleIndice),
+                  marginTop: moderateScale(-40, scaleIndice),
+                  shadowColor: "#000000",
+                  shadowOpacity: 0.15,
+                  elevation: 2,
+                  shadowRadius: 5,
+                  shadowOffset: {
+                    height: 2,
+                    width: 0
+                  }
                 }}
               >
                 <View
                   style={{
-                    marginBottom:
-                      this.state.currentValue < 185
-                        ? -this.state.currentValue / 8
-                        : -185 / 8
+                    height: moderateScale(50, scaleIndice),
+                    flexDirection: "row",
+                    justifyContent: "flex-start",
+                    alignItems: "center"
                   }}
                 >
-                  <SliderRadius
-                    margin={5}
-                    data={[
-                      {
-                        url: product.image,
-                        title: "Latest",
-                        subTitle: "fdsfjdskf sdhk hjdkask dhkasash hsak a"
-                      },
-                      {
-                        url: product.image,
-                        title: "Latest",
-                        subTitle: "fdsfjdskf sdhk hjdkask dhkasash hsak a"
-                      }
-                    ]}
-                    height={400}
-                  />
+                  <View
+                    style={{
+                      width: moderateScale(70, scaleIndice),
+                      height: moderateScale(17, scaleIndice),
+                      borderRadius: moderateScale(50, scaleIndice),
+                      marginRight: moderateScale(5, scaleIndice),
+                      backgroundColor: "#FEEB18",
+                      justifyContent: "center",
+                      alignItems: "center"
+                    }}
+                  >
+                    <Text
+                      style={{
+                        color: "#0C4767",
+                        fontSize: moderateScale(8, scaleIndice),
+                        fontWeight: "800",
+                        letterSpacing: 0.16
+                      }}
+                    >
+                      {"Best seller"}
+                    </Text>
+                  </View>
+                  <View
+                    style={{
+                      width: moderateScale(70, scaleIndice),
+                      height: moderateScale(17, scaleIndice),
+                      borderRadius: 50,
+                      marginRight: moderateScale(5, scaleIndice),
+                      backgroundColor: "#FEEB18",
+                      justifyContent: "center",
+                      alignItems: "center"
+                    }}
+                  >
+                    <Text
+                      style={{
+                        color: "#0C4767",
+                        fontSize: moderateScale(8, scaleIndice),
+                        fontWeight: "800",
+                        letterSpacing: 0.16
+                      }}
+                    >
+                      {this.state.asset.delivery_time
+                        ? this.state.asset.delivery_time
+                        : ""}
+                    </Text>
+                  </View>
+                  <View
+                    style={{
+                      width: moderateScale(70, scaleIndice),
+                      height: moderateScale(17, scaleIndice),
+                      borderRadius: 50,
+                      marginRight: moderateScale(5, scaleIndice),
+                      backgroundColor: "#FEEB18",
+                      justifyContent: "center",
+                      alignItems: "center"
+                    }}
+                  >
+                    <Text
+                      style={{
+                        color: "#0C4767",
+                        fontSize: moderateScale(8, scaleIndice),
+                        fontWeight: "800",
+                        letterSpacing: 0.16
+                      }}
+                    >
+                      {this.state.asset.free_delivery == true
+                        ? "Free delivery"
+                        : "$5 delivery"}
+                    </Text>
+                  </View>
                 </View>
                 <View
                   style={{
-                    flex: 1,
-                    minHeight: screenHeight,
-                    padding: moderateScale(40, scaleIndice),
-                    backgroundColor: "#fff",
-                    borderTopLeftRadius: moderateScale(30, scaleIndice),
-                    borderTopRightRadius: moderateScale(30, scaleIndice),
-                    marginTop: moderateScale(-40, scaleIndice),
-                    shadowColor: "#000000",
-                    shadowOpacity: 0.15,
-                    elevation: 2,
-                    shadowRadius: 5,
-                    shadowOffset: {
-                      height: 2,
-                      width: 0
-                    }
+                    justifyContent: "flex-start",
+                    alignItems: "flex-start"
+                  }}
+                >
+                  <Text
+                    style={{
+                      color: "#272727",
+                      fontSize: moderateScale(20, scaleIndice),
+                      textAlign: "justify",
+                      flexWrap: "wrap",
+                      fontWeight: "bold"
+                    }}
+                  >
+                    {product.name}
+                  </Text>
+                </View>
+                <TouchableOpacity
+                  onPress={() => this.props.navigation.navigate("Review")}
+                  style={{
+                    height: moderateScale(40, scaleIndice),
+                    justifyContent: "center",
+                    alignItems: "flex-start"
                   }}
                 >
                   <View
                     style={{
-                      height: moderateScale(50, scaleIndice),
-                      flexDirection: "row",
-                      justifyContent: "flex-start",
-                      alignItems: "center"
+                      flexDirection: "row"
                     }}
                   >
                     <View
                       style={{
-                        width: moderateScale(70, scaleIndice),
-                        height: moderateScale(17, scaleIndice),
-                        borderRadius: moderateScale(50, scaleIndice),
-                        marginRight: moderateScale(5, scaleIndice),
-                        backgroundColor: "#FEEB18",
-                        justifyContent: "center",
-                        alignItems: "center"
+                        margin: 2,
+                        height: moderateScale(10, scaleIndice),
+                        width: moderateScale(10, scaleIndice),
+                        borderRadius: moderateScale(10, scaleIndice),
+                        backgroundColor: "#0C4767"
                       }}
-                    >
-                      <Text
-                        style={{
-                          color: "#0C4767",
-                          fontSize: moderateScale(8, scaleIndice),
-                          fontWeight: "800",
-                          letterSpacing: 0.16
-                        }}
-                      >
-                        {"Best seller"}
-                      </Text>
-                    </View>
+                    />
                     <View
                       style={{
-                        width: moderateScale(70, scaleIndice),
-                        height: moderateScale(17, scaleIndice),
-                        borderRadius: 50,
-                        marginRight: moderateScale(5, scaleIndice),
-                        backgroundColor: "#FEEB18",
-                        justifyContent: "center",
-                        alignItems: "center"
+                        margin: moderateScale(2, scaleIndice),
+                        height: moderateScale(10, scaleIndice),
+                        width: moderateScale(10, scaleIndice),
+                        borderRadius: moderateScale(10, scaleIndice),
+                        backgroundColor: "#0C4767"
                       }}
-                    >
-                      <Text
-                        style={{
-                          color: "#0C4767",
-                          fontSize: moderateScale(8, scaleIndice),
-                          fontWeight: "800",
-                          letterSpacing: 0.16
-                        }}
-                      >
-                        {"15 - 25 mins"}
-                      </Text>
-                    </View>
+                    />
                     <View
                       style={{
-                        width: moderateScale(70, scaleIndice),
-                        height: moderateScale(17, scaleIndice),
-                        borderRadius: 50,
-                        marginRight: moderateScale(5, scaleIndice),
-                        backgroundColor: "#FEEB18",
-                        justifyContent: "center",
-                        alignItems: "center"
+                        margin: moderateScale(2, scaleIndice),
+                        height: moderateScale(10, scaleIndice),
+                        width: moderateScale(10, scaleIndice),
+                        borderRadius: moderateScale(10, scaleIndice),
+                        backgroundColor: "#0C4767"
                       }}
-                    >
-                      <Text
-                        style={{
-                          color: "#0C4767",
-                          fontSize: moderateScale(8, scaleIndice),
-                          fontWeight: "800",
-                          letterSpacing: 0.16
-                        }}
-                      >
-                        {"$2 Delivery"}
-                      </Text>
-                    </View>
-                  </View>
-                  <View
-                    style={{
-                      height: moderateScale(30, scaleIndice),
+                    />
+                    <View
+                      style={{
+                        margin: moderateScale(2, scaleIndice),
+                        height: moderateScale(10, scaleIndice),
+                        width: moderateScale(10, scaleIndice),
+                        borderRadius: moderateScale(10, scaleIndice),
+                        backgroundColor: "#0C4767"
+                      }}
+                    />
+                    <View
+                      style={{
+                        margin: moderateScale(2, scaleIndice),
+                        height: moderateScale(10, scaleIndice),
+                        width: moderateScale(10, scaleIndice),
+                        borderRadius: moderateScale(10, scaleIndice),
+                        backgroundColor: "#0C4767"
+                      }}
+                    />
 
-                      justifyContent: "flex-start",
-                      alignItems: "flex-start"
-                    }}
-                  >
                     <Text
                       style={{
-                        color: "#272727",
-                        fontSize: moderateScale(20, scaleIndice),
+                        color: "#7A7F83",
+                        fontSize: moderateScale(11, scaleIndice),
                         fontWeight: "bold"
                       }}
                     >
-                      {product.name}
-                      {container.getItems().length}
+                      {" 4.5\t22k review"}
                     </Text>
                   </View>
-                  <View
+                </TouchableOpacity>
+                <View
+                  style={{
+                    height: 25,
+                    flexDirection: "row",
+                    justifyContent: "flex-start",
+                    alignItems: "center"
+                  }}
+                >
+                  {/* 
+                    <Text
+                          style={{
+                            color: colors.grey,
+                            fontSize: moderateScale(10, scaleIndice),
+                            fontWeight: "400"
+                          }}
+                        >
+                          {`$ ${product.price}`}
+                    </Text> 
+                      */}
+                  <Text
                     style={{
-                      height: moderateScale(40, scaleIndice),
-                      justifyContent: "center",
-                      alignItems: "flex-start"
+                      color: colors.blue,
+                      fontSize: moderateScale(16, scaleIndice),
+                      fontWeight: "bold",
+                      marginLeft: 0
                     }}
                   >
-                    <View
-                      style={{
-                        flexDirection: "row"
-                      }}
-                    >
-                      <View
-                        style={{
-                          margin: 2,
-                          height: moderateScale(10, scaleIndice),
-                          width: moderateScale(10, scaleIndice),
-                          borderRadius: moderateScale(10, scaleIndice),
-                          backgroundColor: "#0C4767"
-                        }}
-                      />
-                      <View
-                        style={{
-                          margin: moderateScale(2, scaleIndice),
-                          height: moderateScale(10, scaleIndice),
-                          width: moderateScale(10, scaleIndice),
-                          borderRadius: moderateScale(10, scaleIndice),
-                          backgroundColor: "#0C4767"
-                        }}
-                      />
-                      <View
-                        style={{
-                          margin: moderateScale(2, scaleIndice),
-                          height: moderateScale(10, scaleIndice),
-                          width: moderateScale(10, scaleIndice),
-                          borderRadius: moderateScale(10, scaleIndice),
-                          backgroundColor: "#0C4767"
-                        }}
-                      />
-                      <View
-                        style={{
-                          margin: moderateScale(2, scaleIndice),
-                          height: moderateScale(10, scaleIndice),
-                          width: moderateScale(10, scaleIndice),
-                          borderRadius: moderateScale(10, scaleIndice),
-                          backgroundColor: "#0C4767"
-                        }}
-                      />
-                      <View
-                        style={{
-                          margin: moderateScale(2, scaleIndice),
-                          height: moderateScale(10, scaleIndice),
-                          width: moderateScale(10, scaleIndice),
-                          borderRadius: moderateScale(10, scaleIndice),
-                          backgroundColor: "#0C4767"
-                        }}
-                      />
-
-                      <Text
-                        style={{
-                          color: "#7A7F83",
-                          fontSize: moderateScale(11, scaleIndice),
-                          fontWeight: "bold"
-                        }}
-                      >
-                        {" 4.5\t22k review"}
-                      </Text>
-                    </View>
-                  </View>
+                    {formatNumber(
+                      product.price *
+                        (this.state.asset.currency.toUpperCase() ==
+                        product.currency.toUpperCase()
+                          ? 1
+                          : this.state.asset.all.rate.value),
+                      this.state.asset.currency
+                    )}
+                  </Text>
                   <View
                     style={{
-                      height: 25,
-                      flexDirection: "row",
-                      justifyContent: "flex-start",
+                      height: moderateScale(17, scaleIndice),
+                      borderRadius: 50,
+                      marginLeft: 20,
+                      marginRight: moderateScale(5, scaleIndice),
+                      backgroundColor: "#FEEB18",
+                      justifyContent: "center",
                       alignItems: "center"
                     }}
                   >
-                    <Text
-                      style={{
-                        color: colors.grey,
-                        fontSize: moderateScale(10, scaleIndice),
-                        fontWeight: "400"
-                      }}
-                    >
-                      {`$ ${product.price + 50}`}
-                    </Text>
-                    <Text
-                      style={{
-                        color: colors.blue,
-                        fontSize: moderateScale(16, scaleIndice),
-                        fontWeight: "bold",
-                        marginLeft: 10
-                      }}
-                    >
-                      ${product.price}
-                    </Text>
-                    <View
-                      style={{
-                        height: moderateScale(17, scaleIndice),
-                        borderRadius: 50,
-                        marginLeft: 20,
-                        marginRight: moderateScale(5, scaleIndice),
-                        backgroundColor: "#FEEB18",
-                        justifyContent: "center",
-                        alignItems: "center"
-                      }}
-                    >
-                      <Text
-                        style={{
-                          color: "#0C4767",
-                          fontSize: moderateScale(8, scaleIndice),
-                          fontWeight: "800",
-                          letterSpacing: 0.16,
-                          paddingHorizontal: 10
-                        }}
-                      >
-                        {"20 %"}
-                      </Text>
-                    </View>
+                    {/* <Text
+                            style={{
+                              color: "#0C4767",
+                              fontSize: moderateScale(8, scaleIndice),
+                              fontWeight: "800",
+                              letterSpacing: 0.16,
+                              paddingHorizontal: 10
+                            }}
+                          >
+                            {"20 %"}
+                          </Text> */}
                   </View>
-                  <View
-                    style={{
-                      height: 1,
-                      backgroundColor: "#eee",
-                      marginBottom: 15,
-                      marginTop: 15
+                </View>
+                <View
+                  style={{
+                    height: 1,
+                    backgroundColor: "#eee",
+                    marginBottom: 15,
+                    marginTop: 15
+                  }}
+                />
+                <View
+                  style={{
+                    height: 25,
+                    flexDirection: "row",
+                    justifyContent: "flex-start",
+                    alignItems: "center"
+                  }}
+                >
+                  <Ionicons
+                    name="ios-information-circle"
+                    type="ionicon"
+                    color="#0C4767"
+                    size={moderateScale(20, scaleIndice)}
+                    iconStyle={{
+                      marginTop: moderateScale(2, scaleIndice)
                     }}
                   />
-                  <View
+                  <Text
                     style={{
-                      height: 25,
-                      flexDirection: "row",
-                      justifyContent: "flex-start",
-                      alignItems: "center"
+                      color: "#7A7F83",
+                      fontSize: moderateScale(12, scaleIndice),
+                      marginBottom: 3,
+                      marginLeft: 5
                     }}
                   >
-                    <Ionicons
-                      name="ios-information-circle"
-                      type="ionicon"
-                      color="#0C4767"
-                      size={moderateScale(20, scaleIndice)}
-                      iconStyle={{ marginTop: moderateScale(2, scaleIndice) }}
-                    />
-                    <Text
-                      style={{
-                        color: "#7A7F83",
-                        fontSize: moderateScale(12, scaleIndice),
-
-                        marginLeft: 10
-                      }}
-                    >
-                      {"Product from"}
-                    </Text>
-                    <Text
-                      style={{
-                        color: "#7A7F83",
-                        fontSize: moderateScale(12, scaleIndice),
-                        fontWeight: "bold"
-                      }}
-                    >
-                      {`${product.product_by}`}
-                    </Text>
-                  </View>
-                  <View
+                    {"Product from "}
+                  </Text>
+                  <Text
                     style={{
-                      height: moderateScale(25, scaleIndice),
-                      flexDirection: "row",
-                      justifyContent: "flex-start",
-                      alignItems: "center"
+                      color: "#7A7F83",
+                      fontSize: moderateScale(12, scaleIndice),
+                      fontWeight: "bold"
                     }}
                   >
-                    <Ionicons
-                      name="ios-information-circle"
-                      type="ionicon"
-                      color="#0C4767"
-                      size={moderateScale(20, scaleIndice)}
-                      iconStyle={{ marginTop: moderateScale(2, scaleIndice) }}
-                    />
-                    <Text
-                      style={{
-                        color: "#7A7F83",
-                        fontSize: moderateScale(12, scaleIndice),
+                    {`${product.brand}`}
+                  </Text>
+                </View>
+                <View
+                  style={{
+                    height: moderateScale(25, scaleIndice),
+                    flexDirection: "row",
+                    justifyContent: "flex-start",
+                    alignItems: "center"
+                  }}
+                >
+                  <Ionicons
+                    name="ios-information-circle"
+                    type="ionicon"
+                    color="#0C4767"
+                    size={moderateScale(20, scaleIndice)}
+                    iconStyle={{
+                      marginTop: moderateScale(2, scaleIndice)
+                    }}
+                  />
+                  <Text
+                    style={{
+                      color: "#7A7F83",
+                      fontSize: moderateScale(12, scaleIndice),
 
-                        marginLeft: moderateScale(10, scaleIndice)
-                      }}
-                    >
-                      {`${product.shop}`}
-                    </Text>
-                  </View>
+                      marginLeft: moderateScale(5, scaleIndice),
+                      marginBottom: 3
+                    }}
+                  >
+                    {`${this.state.asset.name}`}
+                  </Text>
+                </View>
+                <View
+                  style={{
+                    marginVertical: moderateScale(0, scaleIndice),
+                    justifyContent: "flex-start",
+                    alignItems: "flex-start"
+                  }}
+                >
+                  <Text
+                    style={{
+                      color: "#272727",
+                      fontSize: moderateScale(26, scaleIndice),
+                      fontWeight: "bold",
+                      marginTop: 20
+                    }}
+                  >
+                    {"About this item"}
+                  </Text>
+                </View>
+
+                <View style={{}}>
+                  <Text
+                    style={{
+                      color: colors.black,
+                      fontSize: moderateScale(16, scaleIndice),
+                      fontWeight: "500",
+                      marginTop: 20
+                    }}
+                  >
+                    {"Description"}
+                  </Text>
                   <View
                     style={{
-                      marginVertical: moderateScale(0, scaleIndice),
-                      justifyContent: "flex-start",
-                      alignItems: "flex-start"
+                      backgroundColor: "#fff",
+                      borderRadius: 10,
+                      marginTop: 10
                     }}
                   >
                     <Text
                       style={{
-                        color: "#272727",
-                        fontSize: moderateScale(26, scaleIndice),
-                        fontWeight: "bold",
-                        marginTop: 20
-                      }}
-                    >
-                      {"About this item"}
-                    </Text>
-                  </View>
+                        color: "#777",
+                        textAlign: "justify",
 
-                  <View style={{}}>
-                    <Text
-                      style={{
-                        color: colors.black,
-                        fontSize: moderateScale(16, scaleIndice),
-                        fontWeight: "500",
-                        marginTop: 20
+                        fontSize: moderateScale(13, scaleIndice)
                       }}
                     >
-                      {"Description"}
+                      {product.desc}
                     </Text>
-                    <View
-                      style={{
-                        backgroundColor: "#fff",
-                        borderRadius: 10,
-                        marginTop: 20
-                      }}
-                    >
-                      <Text
-                        style={{
-                          color: "#777",
-                          textAlign: "justify",
-
-                          fontSize: moderateScale(13, scaleIndice)
-                        }}
-                      >
-                        {
-                          "•2.3GHz dual-core 7th-generation\n•Intel Core i5 processor\n•Turbo Boost up to 3.6GHz\n•Intel Iris Plus Graphics 640\n•8GB 2133MHz LPDDR3 memory\n•128GB SSD storage1\n•Retina display\n•Two Thunderbolt 3 ports"
-                        }
-                      </Text>
-                    </View>
                   </View>
                 </View>
               </View>
-            </ScrollView>
+            </View>
+          </ScrollView>
+        ) : null}
 
-            <Modal isVisible={this.state.isModalVisible} style={{}}>
-              <View
-                style={{
-                  backgroundColor: "#fff",
-                  paddingBottom: 30,
-                  borderRadius: 46
-                }}
-              >
+        <Modal isVisible={this.state.isModalVisible} style={{}}>
+          <View
+            style={{
+              backgroundColor: "#fff",
+              paddingBottom: 30,
+              borderRadius: 46
+            }}
+          >
+            {this.state.product && this.state.product.name ? (
+              <View>
                 <TouchableOpacity
                   onPress={() => this.toggleModal()}
                   style={{
@@ -922,7 +1070,12 @@ class Details extends React.Component {
                     }}
                   >
                     <Image
-                      source={{ uri: product.image }}
+                      source={{
+                        uri:
+                          product.image && product.image[0]
+                            ? product.image[0].url
+                            : "http://blank"
+                      }}
                       style={{
                         height: 60,
                         width: 60,
@@ -1035,14 +1188,24 @@ class Details extends React.Component {
                   </Text>
                 </TouchableOpacity>
               </View>
-            </Modal>
-          </View>}
-      </Subscribe>
+            ) : null}
+          </View>
+        </Modal>
+      </View>
     );
   }
 }
 
-export default Details;
+const mapStateToProps = state => {
+  const { carts } = state.bags;
+  const { user } = state.user;
+  return { carts, user };
+};
+export default connect(mapStateToProps, {
+  addItem,
+  setCarts,
+  setUser
+})(Details);
 
 const styles = StyleSheet.create({
   safeView: {
@@ -1136,7 +1299,7 @@ class SliderRadius extends React.Component {
           }}
           loop={false}
         >
-          {data.map(item =>
+          {data.map(item => (
             <ImageBackground
               key={JSON.stringify(item)}
               source={{ uri: item.url }}
@@ -1182,7 +1345,7 @@ class SliderRadius extends React.Component {
                 </Text>
               </View>
             </ImageBackground>
-          )}
+          ))}
         </Swiper>
       </Animated.View>
     );

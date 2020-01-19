@@ -11,6 +11,9 @@ import {
   SigninScreen,
   ForgetPassword,
   Shop,
+  FavoritesStore,
+  WishList,
+  ShopInfo,
   AllProducts,
   Maps,
   Details,
@@ -23,12 +26,16 @@ import {
   AddCard,
   CardList,
   Orders,
+  OrderConfirm,
+  OrderDetails,
   EditProfile,
   Settings,
-  Support
+  Support,
+  Review
 } from "../screens";
 import demo from "../services/demo";
 import HomeTabs from "./homeTabs";
+
 export class Screen extends Component {
   render() {
     return (
@@ -53,6 +60,15 @@ const MainNavigator = createStackNavigator(
         title: "",
         header: null
       })
+    },
+    FavoritesStore: {
+      screen: FavoritesStore
+    },
+    WishList: {
+      screen: WishList
+    },
+    ShopInfo: {
+      screen: ShopInfo
     },
     AllProducts: {
       screen: AllProducts,
@@ -82,6 +98,12 @@ const MainNavigator = createStackNavigator(
     },
     Orders: {
       screen: Orders
+    },
+    OrderConfirm: {
+      screen: OrderConfirm
+    },
+    OrderDetails: {
+      screen: OrderDetails
     },
     AddCard: {
       screen: AddCard
@@ -122,6 +144,9 @@ const MainNavigator = createStackNavigator(
     },
     TermesAndConditions: {
       screen: TermesAndConditions
+    },
+    Review: {
+      screen: Review
     },
     Maps: {
       screen: Maps

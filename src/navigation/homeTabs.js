@@ -68,6 +68,7 @@ const HomeTabs = createBottomTabNavigator(
     }
   },
   {
+    lazy: true,
     tabBarPosition: "bottom",
     initialRouteName: "Tab1",
     animationEnabled: true,

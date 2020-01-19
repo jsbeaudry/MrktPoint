@@ -2,6 +2,7 @@ import { Container } from "unstated";
 import { updateUser } from "../services";
 
 import { Stitch } from "mongodb-stitch-react-native-sdk";
+
 class StateContainer extends Container {
   state = {
     items: [],
@@ -14,33 +15,10 @@ class StateContainer extends Container {
   };
 
   addItem = item => {
-    this.state.items.push(item);
-    this.setState(
-      prevState => ({
-        items: prevState.items
-      }),
-      () => {
-        let data_ = Stitch.defaultAppClient.auth.activeUserAuthInfo;
-        if (
-          Stitch.defaultAppClient.auth.activeUserAuthInfo &&
-          Stitch.defaultAppClient.auth.activeUserAuthInfo.userId != undefined
-        ) {
-          updateUser(
-            "users",
-            { user_id: data_.userId },
-            {
-              addressShipping: this.state.items
-            }
-          )
-            .then(results => {
-              console.log(results);
-            })
-            .catch(error => {
-              console.log(error);
-            });
-        }
-      }
-    );
+    this.setState({
+      items: item
+    });
+    console.log(item);
   };
   modifyItemCount = (id, val) => {
     this.state.items[id].count = val;
@@ -55,12 +33,9 @@ class StateContainer extends Container {
       });
     }
     this.state.addresses.unshift(address);
-    this.setState(
-      {
-        addresses: this.state.addresses
-      },
-      () => {}
-    );
+    this.setState({
+      addresses: this.state.addresses
+    });
   };
 
   addCard = card => {

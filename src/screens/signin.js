@@ -20,6 +20,7 @@ import {
   UserPasswordCredential,
   UserPasswordAuthProviderClient
 } from "mongodb-stitch-react-native-sdk";
+import { getOne, addData } from "../services/stitch";
 
 const PADDINGLEFT = Platform.OS === "ios" ? 0 : 5;
 
@@ -59,26 +60,56 @@ export default class Sign extends React.Component {
         {
           currentUserId: client.auth.user.id
         },
-        () => this.props.navigation.navigate("Main")
+        () => {
+          this.props.navigation.navigate("Main");
+        }
       );
     }
   }
 
   _onPressLogin(credential) {
+    setTimeout(() => {
+      this.setState({ authenticating: false });
+    }, 5000);
     this.state.client.auth
       .loginWithCredential(credential)
       .then(user => {
         // Switch active user to to user1
 
+        console.log(user.auth.activeUserAuthInfo.userProfile.data.email);
+        let myemail = user.auth.activeUserAuthInfo.userProfile.data.email;
         this.setState({ currentUserId: user.id, authenticating: false }, () => {
-          this.props.navigation.navigate("Main");
-          let activeUser = this.state.client.auth.switchToUserWithId(user.id);
-          console.log("active user is user1" + activeUser.id === user.id);
+          getOne("users", { user_id: user.id })
+            .then(results => {
+              //console.log(results[0].user_id);
+              this.state.client.auth.switchToUserWithId(user.id);
+
+              if (results[0] && results[0].user_id) {
+                console.log("User has been register");
+                this.props.navigation.navigate("Main");
+              } else {
+                console.log("USer not has been register");
+
+                addData("users", { user_id: user.id, email: myemail })
+                  .then(results2 => {
+                    console.log(results2);
+
+                    this.props.navigation.navigate("Main");
+                  })
+                  .catch(error => {
+                    console.log(error);
+                  });
+              }
+            })
+            .catch(error => {
+              console.log(error);
+            });
         });
       })
       .catch(err => {
         console.log(`Failed to log in anonymously: ${err}`);
-        this.setState({ currentUserId: undefined });
+        alert("No user found");
+        this.setState({ currentUserId: undefined, authenticating: false });
       });
   }
 
@@ -94,7 +125,7 @@ export default class Sign extends React.Component {
       })
       .catch(err => {
         Alert.alert("Registration", "Error registering new user");
-        console.error("Error registering new user:", err);
+        //console.error("Error registering new user:", err);
       });
   }
 
@@ -136,14 +167,21 @@ export default class Sign extends React.Component {
             showsHorizontalScrollIndicator={false}
             horizontal
             keyExtractor={item => JSON.stringify(item)}
-            renderItem={({ item, index }) =>
+            renderItem={({ item, index }) => (
               <TouchableOpacity
                 style={{
                   justifyContent: "center",
                   alignItems: "center",
                   width: 130
                 }}
-                onPress={() => this.setState({ selected: index })}
+                onPress={() =>
+                  this.setState({
+                    selected: index,
+                    fullname: "",
+                    email: "",
+                    password: ""
+                  })
+                }
               >
                 <Text
                   style={{
@@ -155,21 +193,24 @@ export default class Sign extends React.Component {
                 >
                   {item}
                 </Text>
-                {selected === index
-                  ? <View
-                      style={{
-                        height: hp("1.0%"),
-                        width: hp("1.0%"),
-                        borderRadius: hp("0.8%"),
-                        backgroundColor: colors.blue
-                      }}
-                    />
-                  : <View
-                      style={{
-                        height: hp("1.6%")
-                      }}
-                    />}
-              </TouchableOpacity>}
+                {selected === index ? (
+                  <View
+                    style={{
+                      height: hp("1.0%"),
+                      width: hp("1.0%"),
+                      borderRadius: hp("0.8%"),
+                      backgroundColor: colors.blue
+                    }}
+                  />
+                ) : (
+                  <View
+                    style={{
+                      height: hp("1.6%")
+                    }}
+                  />
+                )}
+              </TouchableOpacity>
+            )}
           />
         </View>
         <View
@@ -197,401 +238,467 @@ export default class Sign extends React.Component {
             {"Log in to your account to shop faster."}
           </Text>
 
-          {selected === 0
-            ? <View
-                style={{
-                  width: wp("90%"),
-                  alignSelf: "center",
-                  height: hp("20%"),
-                  backgroundColor: "#ffffff",
-                  borderRadius: 16,
-                  shadowColor: "#000000",
-                  shadowOpacity: 0.15,
-                  elevation: 2,
-                  shadowRadius: 6,
-                  shadowOffset: {
-                    height: 2,
-                    width: 0
-                  }
-                }}
-              >
-                <View
-                  style={{
-                    flex: 1,
-                    borderBottomWidth: 1,
-                    borderBottomColor: "#D8D8D8",
-                    paddingLeft: 30,
-                    paddingTop: 20
-                  }}
-                >
-                  <Text
-                    style={{
-                      color: "#D8D8D8",
-                      fontSize: 14,
-                      paddingLeft: PADDINGLEFT
-                    }}
-                  >
-                    {"Email"}
-                  </Text>
-                  <TextInput
-                    autoCorrect={false}
-                    returnKeyType="go"
-                    autoCapitalize="none"
-                    placeholder="exemple@gmail.com"
-                    value={email}
-                    onChangeText={text => {
-                      this.setState({
-                        email: text
-                      });
-                    }}
-                    style={{
-                      width: "100%",
-                      fontSize: 15,
-                      paddingVertical: 7
-                    }}
-                  />
-                  <Icon
-                    name="ios-checkmark"
-                    color={colors.yellow}
-                    style={{
-                      position: "absolute",
-                      right: 20,
-                      top: 30,
-                      fontSize: 40,
-                      marginLeft: 20
-                    }}
-                  />
-                </View>
-
-                <View
-                  style={{
-                    flex: 1,
-                    paddingLeft: 30,
-                    paddingTop: 20
-                  }}
-                >
-                  <Text
-                    style={{
-                      color: "#D8D8D8",
-                      fontSize: 14,
-                      paddingLeft: PADDINGLEFT
-                    }}
-                  >
-                    {"Password"}
-                  </Text>
-                  <TextInput
-                    autoCorrect={false}
-                    secureTextEntry
-                    returnKeyType="go"
-                    keyboardType="default"
-                    placeholder="****************"
-                    value={password}
-                    onChangeText={text => {
-                      this.setState({
-                        password: text
-                      });
-                    }}
-                    style={{
-                      width: "90%",
-                      fontSize: 15,
-                      paddingVertical: 7
-                    }}
-                  />
-
-                  <TouchableOpacity
-                    style={{
-                      position: "absolute",
-                      right: 20,
-                      top: 30
-                    }}
-                    onPress={() => {
-                      this.setState({ selected: 2 });
-                    }}
-                  >
-                    <Text
-                      style={{
-                        fontSize: hp("2%"),
-                        color: colors.grey
-                      }}
-                    >
-                      {"Forgot?"}
-                    </Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-            : null}
-          {selected === 1
-            ? <View
-                style={{
-                  width: wp("90%"),
-                  alignSelf: "center",
-                  height: hp("25%"),
-                  backgroundColor: "#ffffff",
-                  borderRadius: 16,
-                  shadowColor: "#000000",
-                  shadowOpacity: 0.15,
-                  elevation: 2,
-                  shadowRadius: 6,
-                  shadowOffset: {
-                    height: 2,
-                    width: 0
-                  }
-                }}
-              >
-                <View
-                  style={{
-                    flex: 1,
-                    borderBottomWidth: 1,
-                    borderBottomColor: "#D8D8D8",
-                    paddingHorizontal: 30,
-                    paddingVertical: 10
-                  }}
-                >
-                  <Text
-                    style={{
-                      color: "#D8D8D8",
-                      fontSize: 14,
-                      paddingLeft: PADDINGLEFT
-                    }}
-                  >
-                    {"Full Name"}
-                  </Text>
-                  <TextInput
-                    autoCorrect={false}
-                    returnKeyType="go"
-                    value={fullname}
-                    onChangeText={text => {
-                      this.setState({
-                        fullname: text
-                      });
-                    }}
-                    placeholder="John Bob"
-                    style={{
-                      width: "100%",
-                      fontSize: 15,
-                      paddingVertical: 7
-                    }}
-                  />
-                  <Icon
-                    name="ios-checkmark"
-                    color={colors.yellow}
-                    style={{
-                      position: "absolute",
-                      right: 20,
-                      top: 10,
-                      fontSize: 40,
-                      marginLeft: 20
-                    }}
-                  />
-                </View>
-
-                <View
-                  style={{
-                    flex: 1,
-                    borderBottomWidth: 1,
-                    borderBottomColor: "#D8D8D8",
-                    paddingHorizontal: 30,
-                    paddingVertical: 10
-                  }}
-                >
-                  <Text
-                    style={{
-                      color: "#D8D8D8",
-                      fontSize: 14,
-                      paddingLeft: PADDINGLEFT
-                    }}
-                  >
-                    {"Email"}
-                  </Text>
-                  <TextInput
-                    autoCorrect={false}
-                    returnKeyType="go"
-                    autoCapitalize="none"
-                    placeholder="exemple@gmail.com"
-                    value={email}
-                    onChangeText={text => {
-                      this.setState({
-                        email: text
-                      });
-                    }}
-                    style={{
-                      width: "100%",
-                      fontSize: 15,
-                      paddingVertical: 7
-                    }}
-                  />
-                  <Icon
-                    name="ios-checkmark"
-                    color={colors.yellow}
-                    style={{
-                      position: "absolute",
-                      right: 20,
-                      top: 10,
-                      fontSize: 40,
-                      marginLeft: 20
-                    }}
-                  />
-                </View>
-
-                <View
-                  style={{
-                    flex: 1,
-                    borderBottomColor: "#D8D8D8",
-                    paddingHorizontal: 30,
-                    paddingVertical: 10
-                  }}
-                >
-                  <Text
-                    style={{
-                      color: "#D8D8D8",
-                      fontSize: 14,
-                      paddingLeft: PADDINGLEFT
-                    }}
-                  >
-                    {"Password"}
-                  </Text>
-                  <TextInput
-                    autoCorrect={false}
-                    secureTextEntry
-                    returnKeyType="go"
-                    keyboardType="default"
-                    placeholder="****************"
-                    value={password}
-                    onChangeText={text => {
-                      this.setState({
-                        password: text
-                      });
-                    }}
-                    style={{
-                      width: "100%",
-                      fontSize: 15,
-                      paddingVertical: 7
-                    }}
-                  />
-                  <Icon
-                    name="ios-checkmark"
-                    color={colors.yellow}
-                    style={{
-                      position: "absolute",
-                      right: 20,
-                      top: 10,
-                      fontSize: 40,
-                      marginLeft: 20
-                    }}
-                  />
-                </View>
-              </View>
-            : null}
-          {selected === 2
-            ? <View
-                style={{
-                  width: wp("90%"),
-                  alignSelf: "center",
-                  height: hp("13%"),
-                  backgroundColor: "#ffffff",
-                  borderRadius: 16,
-                  shadowColor: "#000000",
-                  shadowOpacity: 0.15,
-                  elevation: 2,
-                  shadowRadius: 6,
-                  shadowOffset: {
-                    height: 2,
-                    width: 0
-                  }
-                }}
-              >
-                <View
-                  style={{
-                    flex: 1,
-
-                    paddingLeft: 30,
-                    paddingRight: 10,
-                    paddingTop: 20
-                  }}
-                >
-                  <Text
-                    style={{
-                      color: "#D8D8D8",
-                      fontSize: 14,
-                      paddingLeft: PADDINGLEFT
-                    }}
-                  >
-                    {"Email"}
-                  </Text>
-                  <TextInput
-                    autoCorrect={false}
-                    returnKeyType="go"
-                    autoCapitalize="none"
-                    placeholder="exemple@gmail.com"
-                    value={email}
-                    onChangeText={text => {
-                      this.setState({
-                        email: text
-                      });
-                    }}
-                    style={{
-                      width: "100%",
-                      fontSize: 15,
-                      paddingVertical: 7,
-                      borderBottomWidth: 0,
-                      borderBottomColor: "#D8D8D8"
-                    }}
-                  />
-                  <Icon
-                    name="ios-checkmark"
-                    color={colors.yellow}
-                    style={{
-                      position: "absolute",
-                      right: 20,
-                      top: 30,
-                      fontSize: 40,
-                      marginLeft: 20
-                    }}
-                  />
-                </View>
-              </View>
-            : null}
-          {authenticating == true
-            ? <ActivityIndicator
-                style={{ alignSelf: "center", marginTop: 10 }}
-              />
-            : null}
-          <TouchableOpacity
-            style={{
-              height: 53,
-              width: 305,
-              justifyContent: "center",
-              alignItems: "center",
-              backgroundColor: colors.blue,
-              borderRadius: 26.52,
-              alignSelf: "center",
-              marginTop: 30,
-              marginVertical: 5
-            }}
-            onPress={() => {
-              //this.props.navigation.navigate("Main");
-              if (selected === 1) {
-                const emailPasswordClient = Stitch.defaultAppClient.auth.getProviderClient(
-                  UserPasswordAuthProviderClient.factory
-                );
-                this._onPressRegister(emailPasswordClient, email, password);
-              } else {
-                const credential = new UserPasswordCredential(email, password);
-                this.setState({ authenticating: true }, () => {
-                  this._onPressLogin(credential);
-                });
-              }
-            }}
-          >
-            <Text
+          {selected === 0 ? (
+            <View
               style={{
-                fontSize: 18,
-                color: colors.white
+                width: wp("90%"),
+                alignSelf: "center",
+                height: hp("20%"),
+                backgroundColor: "#ffffff",
+                borderRadius: 16,
+                shadowColor: "#000000",
+                shadowOpacity: 0.15,
+                elevation: 2,
+                shadowRadius: 6,
+                shadowOffset: {
+                  height: 2,
+                  width: 0
+                }
               }}
             >
-              {selected === 0 ? "Sign in" : "Sign up"}
-            </Text>
-          </TouchableOpacity>
+              <View
+                style={{
+                  flex: 1,
+                  borderBottomWidth: 1,
+                  borderBottomColor: "#D8D8D8",
+                  paddingLeft: 30,
+                  paddingTop: 20
+                }}
+              >
+                <Text
+                  style={{
+                    color: "#D8D8D8",
+                    fontSize: 14,
+                    paddingLeft: PADDINGLEFT
+                  }}
+                >
+                  {"Email"}
+                </Text>
+                <TextInput
+                  autoCorrect={false}
+                  returnKeyType="go"
+                  autoCapitalize="none"
+                  keyboardType="email-address"
+                  placeholder="exemple@gmail.com"
+                  value={email}
+                  onChangeText={text => {
+                    this.setState({
+                      email: text
+                    });
+                  }}
+                  style={{
+                    width: "100%",
+                    fontSize: 15,
+                    paddingVertical: 7
+                  }}
+                />
+                {email.includes("@") && email.includes(".") ? (
+                  <Icon
+                    name="ios-checkmark"
+                    color={colors.yellow}
+                    style={{
+                      position: "absolute",
+                      right: 20,
+                      top: 10,
+                      fontSize: 40,
+                      marginLeft: 20
+                    }}
+                  />
+                ) : null}
+              </View>
+
+              <View
+                style={{
+                  flex: 1,
+                  paddingLeft: 30,
+                  paddingTop: 20
+                }}
+              >
+                <Text
+                  style={{
+                    color: "#D8D8D8",
+                    fontSize: 14,
+                    paddingLeft: PADDINGLEFT
+                  }}
+                >
+                  {"Password"}
+                </Text>
+                <TextInput
+                  autoCorrect={false}
+                  secureTextEntry
+                  returnKeyType="go"
+                  keyboardType="default"
+                  placeholder="****************"
+                  value={password}
+                  onChangeText={text => {
+                    this.setState({
+                      password: text
+                    });
+                  }}
+                  style={{
+                    width: "90%",
+                    fontSize: 15,
+                    paddingVertical: 7
+                  }}
+                />
+
+                <TouchableOpacity
+                  style={{
+                    position: "absolute",
+                    right: 50,
+                    top: 30
+                  }}
+                  onPress={() => {
+                    this.setState({ selected: 2 });
+                  }}
+                >
+                  <Text
+                    style={{
+                      fontSize: hp("2%"),
+                      color: colors.grey
+                    }}
+                  >
+                    {"Forgot?"}
+                  </Text>
+                </TouchableOpacity>
+                {password.length > 10 ? (
+                  <Icon
+                    name="ios-checkmark"
+                    color={colors.yellow}
+                    style={{
+                      position: "absolute",
+                      right: 20,
+                      top: 20,
+                      fontSize: 40
+                    }}
+                  />
+                ) : null}
+              </View>
+            </View>
+          ) : null}
+          {selected === 1 ? (
+            <View
+              style={{
+                width: wp("90%"),
+                alignSelf: "center",
+                height: hp("25%"),
+                backgroundColor: "#ffffff",
+                borderRadius: 16,
+                shadowColor: "#000000",
+                shadowOpacity: 0.15,
+                elevation: 2,
+                shadowRadius: 6,
+                shadowOffset: {
+                  height: 2,
+                  width: 0
+                }
+              }}
+            >
+              <View
+                style={{
+                  flex: 1,
+                  borderBottomWidth: 1,
+                  borderBottomColor: "#D8D8D8",
+                  paddingHorizontal: 30,
+                  paddingVertical: 10
+                }}
+              >
+                <Text
+                  style={{
+                    color: "#D8D8D8",
+                    fontSize: 14,
+                    paddingLeft: PADDINGLEFT
+                  }}
+                >
+                  {"Full Name"}
+                </Text>
+                <TextInput
+                  autoCorrect={false}
+                  returnKeyType="go"
+                  value={fullname}
+                  onChangeText={text => {
+                    this.setState({
+                      fullname: text
+                    });
+                  }}
+                  placeholder="John Bob"
+                  style={{
+                    width: "100%",
+                    fontSize: 15,
+                    paddingVertical: 7
+                  }}
+                />
+                {fullname.length > 10 ? (
+                  <Icon
+                    name="ios-checkmark"
+                    color={colors.yellow}
+                    style={{
+                      position: "absolute",
+                      right: 20,
+                      top: 10,
+                      fontSize: 40,
+                      marginLeft: 20
+                    }}
+                  />
+                ) : null}
+              </View>
+
+              <View
+                style={{
+                  flex: 1,
+                  borderBottomWidth: 1,
+                  borderBottomColor: "#D8D8D8",
+                  paddingHorizontal: 30,
+                  paddingVertical: 10
+                }}
+              >
+                <Text
+                  style={{
+                    color: "#D8D8D8",
+                    fontSize: 14,
+                    paddingLeft: PADDINGLEFT
+                  }}
+                >
+                  {"Email"}
+                </Text>
+                <TextInput
+                  autoCorrect={false}
+                  returnKeyType="go"
+                  autoCapitalize="none"
+                  keyboardType="email-address"
+                  placeholder="exemple@gmail.com"
+                  value={email}
+                  onChangeText={text => {
+                    this.setState({
+                      email: text
+                    });
+                  }}
+                  style={{
+                    width: "100%",
+                    fontSize: 15,
+                    paddingVertical: 7
+                  }}
+                />
+
+                {email.includes("@") && email.includes(".") ? (
+                  <Icon
+                    name="ios-checkmark"
+                    color={colors.yellow}
+                    style={{
+                      position: "absolute",
+                      right: 20,
+                      top: 10,
+                      fontSize: 40,
+                      marginLeft: 20
+                    }}
+                  />
+                ) : null}
+              </View>
+
+              <View
+                style={{
+                  flex: 1,
+                  borderBottomColor: "#D8D8D8",
+                  paddingHorizontal: 30,
+                  paddingVertical: 10
+                }}
+              >
+                <Text
+                  style={{
+                    color: "#D8D8D8",
+                    fontSize: 14,
+                    paddingLeft: PADDINGLEFT
+                  }}
+                >
+                  {"Password"}
+                </Text>
+                <TextInput
+                  autoCorrect={false}
+                  secureTextEntry
+                  returnKeyType="go"
+                  keyboardType="default"
+                  placeholder="****************"
+                  value={password}
+                  onChangeText={text => {
+                    this.setState({
+                      password: text
+                    });
+                  }}
+                  style={{
+                    width: "100%",
+                    fontSize: 15,
+                    paddingVertical: 7
+                  }}
+                />
+                {password.length > 10 ? (
+                  <Icon
+                    name="ios-checkmark"
+                    color={colors.yellow}
+                    style={{
+                      position: "absolute",
+                      right: 20,
+                      top: 10,
+                      fontSize: 40,
+                      marginLeft: 20
+                    }}
+                  />
+                ) : null}
+              </View>
+            </View>
+          ) : null}
+          {selected === 2 ? (
+            <View
+              style={{
+                width: wp("90%"),
+                alignSelf: "center",
+                height: hp("13%"),
+                backgroundColor: "#ffffff",
+                borderRadius: 16,
+                shadowColor: "#000000",
+                shadowOpacity: 0.15,
+                elevation: 2,
+                shadowRadius: 6,
+                shadowOffset: {
+                  height: 2,
+                  width: 0
+                }
+              }}
+            >
+              <View
+                style={{
+                  flex: 1,
+
+                  paddingLeft: 30,
+                  paddingRight: 10,
+                  paddingTop: 20
+                }}
+              >
+                <Text
+                  style={{
+                    color: "#D8D8D8",
+                    fontSize: 14,
+                    paddingLeft: PADDINGLEFT
+                  }}
+                >
+                  {"Email"}
+                </Text>
+                <TextInput
+                  autoCorrect={false}
+                  returnKeyType="go"
+                  autoCapitalize="none"
+                  placeholder="exemple@gmail.com"
+                  value={email}
+                  onChangeText={text => {
+                    this.setState({
+                      email: text
+                    });
+                  }}
+                  style={{
+                    width: "100%",
+                    fontSize: 15,
+                    paddingVertical: 7,
+                    borderBottomWidth: 0,
+                    borderBottomColor: "#D8D8D8"
+                  }}
+                />
+                <Icon
+                  name="ios-checkmark"
+                  color={colors.yellow}
+                  style={{
+                    position: "absolute",
+                    right: 20,
+                    top: 30,
+                    fontSize: 40,
+                    marginLeft: 20
+                  }}
+                />
+              </View>
+            </View>
+          ) : null}
+          {authenticating == true ? (
+            <ActivityIndicator style={{ alignSelf: "center", marginTop: 10 }} />
+          ) : null}
+          {selected === 0 ? (
+            <TouchableOpacity
+              style={{
+                height: 53,
+                width: 305,
+                justifyContent: "center",
+                alignItems: "center",
+                backgroundColor: colors.blue,
+                borderRadius: 26.52,
+                alignSelf: "center",
+                marginTop: 30,
+                marginVertical: 5
+              }}
+              onPress={() => {
+                if (
+                  email.includes("@") &&
+                  email.includes(".") &&
+                  password.length > 10
+                ) {
+                  const credential = new UserPasswordCredential(
+                    email,
+                    password
+                  );
+
+                  this.setState({ authenticating: true }, () => {
+                    this._onPressLogin(credential);
+                  });
+                } else {
+                  Alert.alert("Sign in", "Please enter a Email and Password");
+                }
+              }}
+            >
+              <Text
+                style={{
+                  fontSize: 18,
+                  color: colors.white
+                }}
+              >
+                Sign in
+              </Text>
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity
+              style={{
+                height: 53,
+                width: 305,
+                justifyContent: "center",
+                alignItems: "center",
+                backgroundColor: colors.blue,
+                borderRadius: 26.52,
+                alignSelf: "center",
+                marginTop: 30,
+                marginVertical: 5
+              }}
+              onPress={() => {
+                if (
+                  email.includes("@") &&
+                  email.includes(".") &&
+                  fullname.length > 10 &&
+                  password.length > 10
+                ) {
+                  const emailPasswordClient = Stitch.defaultAppClient.auth.getProviderClient(
+                    UserPasswordAuthProviderClient.factory
+                  );
+                  this._onPressRegister(emailPasswordClient, email, password);
+                } else {
+                  Alert.alert("Sign up", "Please enter valid fields");
+                }
+              }}
+            >
+              <Text
+                style={{
+                  fontSize: 18,
+                  color: colors.white
+                }}
+              >
+                Sign up
+              </Text>
+            </TouchableOpacity>
+          )}
+
           <View
             style={{
               height: 53,
@@ -633,7 +740,9 @@ export default class Sign extends React.Component {
                 width: 0
               }
             }}
-            onPress={() => {}}
+            onPress={() => {
+              //this.props.navigation.navigate("Main");
+            }}
           >
             <Text
               style={{

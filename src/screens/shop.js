@@ -9,26 +9,32 @@ import {
   StatusBar,
   TouchableOpacity,
   TouchableHighlight,
+  AsyncStorage,
   ImageBackground,
   ActivityIndicator,
   View
 } from "react-native";
+import _ from "lodash";
 import { Icon } from "../utils/icons";
 import { Ionicons } from "react-native-vector-icons";
 import { moderateScale } from "react-native-size-matters";
 import { colors } from "../utils/colors";
 import { Product, Business } from "../utils/class";
+import { addData, deleteOne } from "../services/stitch";
 import {
   HEADER_HEIGHT,
   screenWidth,
   screenHeight,
   scaleIndice
 } from "../utils/variables";
+
+import { Stitch } from "mongodb-stitch-react-native-sdk";
 import Carousel from "react-native-snap-carousel";
 import { CardItem } from "../components";
-
+import { formatNumber } from "../utils/variables";
 import { getAll } from "../services/stitch";
-
+import { connect } from "react-redux";
+import { setUser } from "../redux/actions/user";
 class Shop extends React.Component {
   constructor(props) {
     super(props);
@@ -39,64 +45,84 @@ class Shop extends React.Component {
       business: this.props.navigation.getParam("business", new Business()),
       products: [],
       categories: [],
-      load: false
+      favorites_assets: [],
+      load: false,
+      like_shop: "grey"
     };
   }
 
   componentWillMount = () => {
-    if (
-      JSON.stringify(this.state.business.categories).indexOf("Pick for you") ==
-      -1
-    ) {
-      this.state.business.categories.unshift({
-        title: "Picked for you"
-      });
-    }
+    this.setState({ categories: [] });
+
     setTimeout(() => {
-      // this.state.business.categories.forEach(element => {
-      //   this.state.categories.push({
-      //     title: element.title
-      //   });
-      //   this.setState(prev => ({
-      //     categories: prev.categories
-      //   }));
-      // });
-      this.setState(prev => ({
-        categories: this.state.business.categories
-      }));
+      if (this.state.business.categories && this.state.business.categories[0]) {
+        this.setState(prev => ({
+          categories: this.state.business.categories[0].children
+        }));
+        if (
+          this.state.business.categories[0].children[0].title !=
+          "Picked for you"
+        ) {
+          this.state.business.categories[0].children.unshift({
+            title: "Picked for you"
+          });
+        }
+      } else {
+        this.setState(prev => ({
+          categories: [
+            {
+              title: "Picked for you"
+            }
+          ]
+        }));
+      }
     }, 200);
   };
-
+  componentWillUnmount() {}
   componentDidMount() {
-    // Find asset products
+    if (this.props.user.favorites) {
+      this.setState({
+        like_shop:
+          this.props.user.favorites.filter(
+            i => i.assetId == this.state.business.id.toString()
+          ).length > 0
+            ? "red"
+            : "grey"
+      });
+
+      console.log(this.props.user.favorites);
+    }
     let obj = {
       "asset.id": this.state.business.id.toString()
     };
-    //console.log(this.state.business);
-
-    getAll("products", obj, null).then(results => {
-      //console.log("Results:", results);
-
-      this.setState({
-        products: results.map(element => {
-          return {
-            assetId: this.state.business.id,
-            productId: element._id,
-            name: element.name,
-            product_by: "Tecno",
-            price: element.price ? element.price : 0.0,
-            stock: element.quantity,
-            currency: element.currency ? element.currency.toUpperCase() : "HTG",
-            delivery_time: "10 - 20 mins",
-            cretedAt: Math.floor(Math.random() * 100) + 1,
-            shop: this.state.business.name,
-            image:
-              "https://thumbor.forbes.com/thumbor/960x0/https%3A%2F%2Fblogs-images.forbes.com%2Fgordonkelly%2Ffiles%2F2019%2F07%2FScreenshot-2019-07-15-at-02.32.05.jpg"
-          };
-        }),
-        load: true
+    getAll("products", obj, null)
+      .then(results => {
+        this.setState({
+          products: results.map(element => {
+            return {
+              assetId: this.state.business.id,
+              productId: element._id,
+              name: element.name,
+              product_by: element.brand,
+              categories: element.categories,
+              price: element.price ? element.price : 0.0,
+              stock: element.quantity,
+              currency: element.currency
+                ? element.currency.toUpperCase()
+                : "HTG",
+              delivery_time: "10 - 20 mins",
+              cretedAt: Math.floor(Math.random() * 100) + 1,
+              shop: this.state.business.name,
+              image: element.pictures
+            };
+          }),
+          load: true
+        });
+      })
+      .catch(error => {
+        console.log("error");
+        console.log(error);
       });
-    });
   }
 
   _start = a => {
@@ -117,6 +143,64 @@ class Shop extends React.Component {
     return layoutMeasurement.height + contentOffset.y >= contentSize.height;
   };
 
+  filter(data) {
+    return this.state.favorites_assets.filter(
+      i => JSON.stringify(i).indexOf(this.state.business.id) != -1
+    );
+  }
+  like = () => {
+    this.setState(
+      {
+        like_shop: this.state.like_shop == "grey" ? "red" : "grey"
+      },
+      () => {
+        if (
+          this.props.user.favorites.filter(
+            i => i.assetId == this.state.business.id.toString()
+          ).length == 0
+        ) {
+          let data = {
+            custumerId: this.props.user.user_id,
+            assetId: this.state.business.id,
+            uniqueId: this.state.business.id + "-" + this.props.user.user_id,
+            createAdt: new Date()
+          };
+          this.state.favorites_assets.push(data);
+
+          addData("favorites_assets", data)
+            .then(resp => {
+              console.log("ok");
+
+              this.props.setUser();
+            })
+            .catch(error => {
+              console.log(error);
+            });
+        } else {
+          //alert(this.state.business.id.toString());
+          let id = _.findIndex(this.props.user.favorites, o => {
+            return (
+              o.uniqueId ==
+              this.state.business.id.toString() + "-" + this.props.user.user_id
+            );
+          });
+          this.state.favorites_assets.splice(id, 1);
+          const id_unique =
+            this.state.business.id.toString() + "-" + this.props.user.user_id;
+          deleteOne("favorites_assets", {
+            custumerId: this.props.user.user_id,
+            assetId: this.state.business.id
+          })
+            .then(resp => {
+              this.props.setUser();
+            })
+            .catch(error => {
+              console.log(error);
+            });
+        }
+      }
+    );
+  };
   render() {
     const { selected, business, products, load } = this.state;
     return (
@@ -144,10 +228,13 @@ class Shop extends React.Component {
         >
           <TouchableOpacity
             style={{
-              flex: 20,
-              backgroundColor: "transparent",
+              height: moderateScale(30, scaleIndice),
+              width: moderateScale(30, scaleIndice),
+              marginTop: moderateScale(15, scaleIndice),
+              backgroundColor: "#fff",
               justifyContent: "center",
-              alignItems: "flex-start"
+              alignItems: "center",
+              borderRadius: moderateScale(15, scaleIndice)
             }}
             onPress={() => this.props.navigation.goBack()}
           >
@@ -156,7 +243,7 @@ class Shop extends React.Component {
               type="ionicon"
               color="#000"
               opacity={1 - this.state.fadeValue}
-              size={moderateScale(30, scaleIndice)}
+              size={moderateScale(25, scaleIndice)}
               iconStyle={{}}
             />
           </TouchableOpacity>
@@ -199,12 +286,14 @@ class Shop extends React.Component {
                 justifyContent: "center",
                 alignItems: "center"
               }}
-              onPress={() => {}}
+              onPress={() => {
+                this.like();
+              }}
             >
               <Ionicons
                 name="ios-heart"
                 type="ionicon"
-                color="red"
+                color={this.state.like_shop}
                 size={moderateScale(18, scaleIndice)}
                 iconStyle={{ marginTop: moderateScale(5, scaleIndice) }}
               />
@@ -255,10 +344,13 @@ class Shop extends React.Component {
         >
           <TouchableOpacity
             style={{
-              flex: 20,
-              backgroundColor: "transparent",
+              height: moderateScale(30, scaleIndice),
+              width: moderateScale(30, scaleIndice),
+              marginTop: moderateScale(15, scaleIndice),
+              backgroundColor: "#fff",
               justifyContent: "center",
-              alignItems: "flex-start"
+              alignItems: "center",
+              borderRadius: moderateScale(15, scaleIndice)
             }}
             onPress={() => this.props.navigation.goBack()}
           >
@@ -266,7 +358,7 @@ class Shop extends React.Component {
               name={Platform.OS === "ios" ? "ios-arrow-back" : "md-arrow-back"}
               type="ionicon"
               color="#000"
-              size={moderateScale(30, scaleIndice)}
+              size={moderateScale(25, scaleIndice)}
               iconStyle={{}}
             />
           </TouchableOpacity>
@@ -311,12 +403,14 @@ class Shop extends React.Component {
                 justifyContent: "center",
                 alignItems: "center"
               }}
-              onPress={() => {}}
+              onPress={() => {
+                this.like();
+              }}
             >
               <Ionicons
                 name="ios-heart"
                 type="ionicon"
-                color="red"
+                color={this.state.like_shop}
                 size={moderateScale(18, scaleIndice)}
                 iconStyle={{ marginTop: moderateScale(5, scaleIndice) }}
               />
@@ -361,6 +455,7 @@ class Shop extends React.Component {
 
           <ImageBackground
             source={business.image}
+            resizeMode="cover"
             style={{
               width: screenWidth,
               zIndex: 0
@@ -387,7 +482,7 @@ class Shop extends React.Component {
                 }}
               >
                 <ImageBackground
-                  source={business.image}
+                  source={{ uri: business.logo ? business.logo : "dfdfd" }}
                   borderRadius={moderateScale(40, scaleIndice)}
                   style={{
                     marginTop: -40,
@@ -433,16 +528,14 @@ class Shop extends React.Component {
                     </Text>
                   </View>
                   <View style={styles.tagBlock}>
-                    <Text style={styles.tagText}>
-                      {business.delivery_time}
-                    </Text>
+                    <Text style={styles.tagText}>{business.delivery_time}</Text>
                   </View>
 
-                  {business.free_delivery
-                    ? <View style={styles.tagBlock}>
-                        <Text style={styles.tagText}>Free delivery</Text>
-                      </View>
-                    : null}
+                  {business.free_delivery ? (
+                    <View style={styles.tagBlock}>
+                      <Text style={styles.tagText}>Free delivery</Text>
+                    </View>
+                  ) : null}
                 </View>
                 <View
                   style={{
@@ -465,7 +558,11 @@ class Shop extends React.Component {
                     {"Location and Hours "}
                   </Text>
                   <TouchableOpacity
-                    onPress={() => this.props.navigation.navigate("Maps")}
+                    onPress={() =>
+                      this.props.navigation.navigate("ShopInfo", {
+                        business: this.state.business
+                      })
+                    }
                   >
                     <Text
                       style={{
@@ -523,7 +620,7 @@ class Shop extends React.Component {
                 );
               }}
               sliderWidth={screenWidth}
-              itemWidth={130}
+              itemWidth={110}
               itemHeight={60}
             />
 
@@ -544,208 +641,261 @@ class Shop extends React.Component {
               }}
             />
 
-            {selected > 0
-              ? <FlatList
+            {selected > 0 ? (
+              <FlatList
+                style={{
+                  backgroundColor: "#fff",
+                  alignSelf: "center",
+                  width: screenWidth - 20
+                }}
+                data={products.filter(
+                  i =>
+                    i.categories &&
+                    JSON.stringify(
+                      i.categories.toString().toLowerCase()
+                    ).indexOf(
+                      this.state.categories[selected].title.toLowerCase()
+                    ) != -1
+                )}
+                numColumns={2}
+                keyExtractor={item => JSON.stringify(item)}
+                renderItem={({ item, index }) => (
+                  <TouchableOpacity
+                    onPress={() => {
+                      this.props.navigation.navigate("Details", {
+                        product: { productId: item.productId },
+                        business: this.state.business
+                      });
+                    }}
+                  >
+                    <CardItem
+                      height_={220}
+                      image={
+                        item.image && item.image[0]
+                          ? {
+                              uri: item.image[0].url
+                            }
+                          : require("../images/logo_mrkt.jpg")
+                      }
+                      backgroundColor="#596b9f"
+                      title={
+                        item.name.length <= 17
+                          ? item.name
+                          : item.name.substring(0, 17) + "..."
+                      }
+                      subTitle={item.product_by}
+                      showPrice
+                      price={`${formatNumber(
+                        item.price *
+                          (business.currency == item.currency
+                            ? 1
+                            : this.state.business.all.rate.value),
+                        business.currency
+                      )} `}
+                      deliveryTime={item.delivery_time}
+                    />
+                  </TouchableOpacity>
+                )}
+              />
+            ) : (
+              <View style={{ flex: 1 }}>
+                <View
+                  style={{
+                    flexDirection: "row",
+                    paddingHorizontal: 15,
+                    justifyContent: "space-between",
+                    alignItems: "center",
+
+                    marginBottom: 10
+                  }}
+                >
+                  <Text
+                    style={{
+                      color: "#4A4A4A",
+                      fontSize: 21,
+                      fontWeight: "500"
+                    }}
+                  >
+                    {"Best Electronics"}
+                  </Text>
+                  <TouchableOpacity
+                    onPress={() =>
+                      this.props.navigation.navigate("AllProducts", {
+                        backScreen: "Explorer",
+                        pageText: "Best sellers",
+                        business: this.state.business
+                      })
+                    }
+                  >
+                    <Text
+                      style={{
+                        color: "#980100",
+                        fontSize: 12,
+                        fontWeight: "500"
+                      }}
+                    >
+                      {"View All"}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+                {products.length == 0 && load == false ? (
+                  <ActivityIndicator style={{ marginTop: 10 }} />
+                ) : null}
+                <FlatList
                   style={{
                     backgroundColor: "#fff",
                     alignSelf: "center",
-                    width: screenWidth - 20
+                    paddingHorizontal: moderateScale(10, scaleIndice),
+                    width: screenWidth
                   }}
-                  data={products.sort((a, b) => {
-                    return a.cretedAt - b.cretedAt;
-                  })}
-                  numColumns={2}
+                  showsHorizontalScrollIndicator={false}
+                  data={products}
+                  horizontal
                   keyExtractor={item => JSON.stringify(item)}
-                  renderItem={({ item, index }) =>
-                    <TouchableOpacity
+                  renderItem={({ item, index }) => (
+                    <TouchableHighlight
+                      underlayColor={"#f9f9f9"}
+                      style={{
+                        borderRadius: 10,
+                        marginRight: index === products.length - 1 ? 20 : 0
+                      }}
                       onPress={() => {
                         this.props.navigation.navigate("Details", {
-                          product: item
+                          product: item,
+                          business: business
                         });
                       }}
                     >
                       <CardItem
                         height_={220}
-                        image={{ uri: item.image }}
+                        image={
+                          item.image && item.image[0]
+                            ? {
+                                uri: item.image[0].url
+                              }
+                            : require("../images/logo_mrkt.jpg")
+                        }
                         backgroundColor="#596b9f"
-                        title={item.name}
+                        title={
+                          item.name.length <= 17
+                            ? item.name
+                            : item.name.substring(0, 17) + "..."
+                        }
                         subTitle={item.product_by}
                         showPrice
-                        price={`${item.price} ${item.currency}`}
+                        price={`${formatNumber(
+                          item.price *
+                            (business.currency == item.currency
+                              ? 1
+                              : this.state.business.all.rate.value),
+                          business.currency
+                        )}`}
                         deliveryTime={item.delivery_time}
                       />
-                    </TouchableOpacity>}
+                    </TouchableHighlight>
+                  )}
                 />
-              : <View style={{ flex: 1 }}>
-                  <View
-                    style={{
-                      flexDirection: "row",
-                      paddingHorizontal: 15,
-                      justifyContent: "space-between",
-                      alignItems: "center",
 
-                      marginBottom: 10
+                {/* -------------------------------------------------------------------------- */
+                /*                                  Trending                                  */
+                /* -------------------------------------------------------------------------- */}
+                <View
+                  style={{
+                    flexDirection: "row",
+                    paddingHorizontal: 20,
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    marginTop: 20,
+                    marginBottom: 10
+                  }}
+                >
+                  <Text
+                    style={{
+                      color: "#4A4A4A",
+                      fontSize: 21,
+                      fontWeight: "500"
                     }}
+                  >
+                    {"Trending"}
+                  </Text>
+                  <TouchableOpacity
+                    onPress={() =>
+                      this.props.navigation.navigate("AllProducts", {
+                        backScreen: "Explorer",
+                        pageText: "Trending",
+                        business: this.state.business
+                      })
+                    }
                   >
                     <Text
                       style={{
-                        color: "#4A4A4A",
-                        fontSize: 21,
+                        color: "#980100",
+                        fontSize: 12,
                         fontWeight: "500"
                       }}
                     >
-                      {"Best Electronics"}
+                      {"View All"}
                     </Text>
-                    <TouchableOpacity
-                      onPress={() =>
-                        this.props.navigation.navigate("AllProducts", {
-                          backScreen: "Explorer",
-                          pageText: "Best sellers"
-                        })}
-                    >
-                      <Text
-                        style={{
-                          color: "#980100",
-                          fontSize: 12,
-                          fontWeight: "500"
-                        }}
-                      >
-                        {"View All"}
-                      </Text>
-                    </TouchableOpacity>
-                  </View>
-                  {products.length == 0 && load == false
-                    ? <ActivityIndicator style={{ marginTop: 10 }} />
-                    : null}
-                  <FlatList
-                    style={{
-                      backgroundColor: "#fff",
-                      alignSelf: "center",
-                      paddingHorizontal: moderateScale(10, scaleIndice),
-                      width: screenWidth
-                    }}
-                    showsHorizontalScrollIndicator={false}
-                    data={products.sort((a, b) => {
-                      return a.cretedAt - b.cretedAt;
-                    })}
-                    horizontal
-                    keyExtractor={item => JSON.stringify(item)}
-                    renderItem={({ item, index }) =>
-                      <TouchableHighlight
-                        underlayColor={"#f9f9f9"}
-                        style={{
-                          borderRadius: 10,
-                          marginRight: index === products.length - 1 ? 20 : 0
-                        }}
-                        onPress={() => {
-                          this.props.navigation.navigate("Details", {
-                            product: item
-                          });
-                        }}
-                      >
-                        <CardItem
-                          height_={220}
-                          image={{ uri: item.image }}
-                          backgroundColor="#596b9f"
-                          title={
-                            item.name.length <= 17
-                              ? item.name
-                              : item.name.substring(0, 17) + "..."
-                          }
-                          subTitle={item.product_by}
-                          showPrice
-                          price={`${item.price} ${item.currency.toUpperCase()}`}
-                          deliveryTime={item.delivery_time}
-                        />
-                      </TouchableHighlight>}
-                  />
-
-                  {/* -------------------------------------------------------------------------- */
-                  /*                                  Trending                                  */
-                  /* -------------------------------------------------------------------------- */}
-                  <View
-                    style={{
-                      flexDirection: "row",
-                      paddingHorizontal: 20,
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                      marginTop: 20,
-                      marginBottom: 10
-                    }}
-                  >
-                    <Text
+                  </TouchableOpacity>
+                </View>
+                {products.length == 0 && load == false ? (
+                  <ActivityIndicator style={{ marginTop: 10 }} />
+                ) : null}
+                <FlatList
+                  style={{
+                    backgroundColor: "#fff",
+                    alignSelf: "center",
+                    paddingHorizontal: moderateScale(15, scaleIndice),
+                    width: screenWidth
+                  }}
+                  showsHorizontalScrollIndicator={false}
+                  data={products}
+                  horizontal
+                  keyExtractor={item => JSON.stringify(item)}
+                  renderItem={({ item, index }) => (
+                    <TouchableHighlight
+                      underlayColor={"#f9f9f9"}
                       style={{
-                        color: "#4A4A4A",
-                        fontSize: 21,
-                        fontWeight: "500"
+                        borderRadius: 10,
+                        marginRight: index === products.length - 1 ? 20 : 0
+                      }}
+                      onPress={() => {
+                        this.props.navigation.navigate("Details", {
+                          product: { productId: item.productId },
+                          business: this.state.business
+                        });
+                        console.log(this.state.business);
                       }}
                     >
-                      {"Trending"}
-                    </Text>
-                    <TouchableOpacity
-                      onPress={() =>
-                        this.props.navigation.navigate("AllProducts", {
-                          backScreen: "Explorer",
-                          pageText: "Trending"
-                        })}
-                    >
-                      <Text
-                        style={{
-                          color: "#980100",
-                          fontSize: 12,
-                          fontWeight: "500"
-                        }}
-                      >
-                        {"View All"}
-                      </Text>
-                    </TouchableOpacity>
-                  </View>
-                  {products.length == 0 && load == false
-                    ? <ActivityIndicator style={{ marginTop: 10 }} />
-                    : null}
-                  <FlatList
-                    style={{
-                      backgroundColor: "#fff",
-                      alignSelf: "center",
-                      paddingHorizontal: moderateScale(15, scaleIndice),
-                      width: screenWidth
-                    }}
-                    showsHorizontalScrollIndicator={false}
-                    data={products.sort((a, b) => {
-                      return a.cretedAt - b.cretedAt;
-                    })}
-                    horizontal
-                    keyExtractor={item => JSON.stringify(item)}
-                    renderItem={({ item, index }) =>
-                      <TouchableHighlight
-                        underlayColor={"#f9f9f9"}
-                        style={{
-                          borderRadius: 10,
-                          marginRight: index === products.length - 1 ? 20 : 0
-                        }}
-                        onPress={() => {
-                          this.props.navigation.navigate("Details", {
-                            product: item
-                          });
-                        }}
-                      >
-                        <CardItem
-                          height_={220}
-                          image={{ uri: item.image }}
-                          backgroundColor="#596b9f"
-                          title={
-                            item.name.length <= 17
-                              ? item.name
-                              : item.name.substring(0, 17) + "..."
-                          }
-                          subTitle={item.product_by}
-                          showPrice
-                          price={`${item.price} ${item.currency.toUpperCase()}`}
-                          deliveryTime={item.delivery_time}
-                        />
-                      </TouchableHighlight>}
-                  />
-                </View>}
+                      <CardItem
+                        height_={220}
+                        image={
+                          item.image && item.image[0]
+                            ? {
+                                uri: item.image[0].url
+                              }
+                            : require("../images/logo_mrkt.jpg")
+                        }
+                        backgroundColor="#596b9f"
+                        title={
+                          item.name.length <= 17
+                            ? item.name
+                            : item.name.substring(0, 17) + "..."
+                        }
+                        subTitle={item.product_by}
+                        showPrice
+                        price={`${formatNumber(
+                          item.price *
+                            (business.currency == item.currency ? 1 : 91.5),
+                          business.currency
+                        )}`}
+                        deliveryTime={item.delivery_time}
+                      />
+                    </TouchableHighlight>
+                  )}
+                />
+              </View>
+            )}
           </View>
         </ScrollView>
       </View>
@@ -753,7 +903,11 @@ class Shop extends React.Component {
   }
 }
 
-export default Shop;
+const mapStateToProps = state => {
+  const { user } = state.user;
+  return { user };
+};
+export default connect(mapStateToProps, { setUser })(Shop);
 
 const styles = StyleSheet.create({
   safeView: {

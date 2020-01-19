@@ -1,6 +1,5 @@
 import React from "react";
 import {
-  StyleSheet,
   Platform,
   Text,
   StatusBar,
@@ -8,7 +7,6 @@ import {
   TextInput,
   View
 } from "react-native";
-import { screenHeight } from "../utils/variables";
 import Icon from "react-native-vector-icons/Ionicons";
 import { colors } from "../utils/colors";
 import { Formik } from "formik";
@@ -17,10 +15,22 @@ import { Subscribe } from "unstated";
 import { StateContainer } from "../utils/stateContainer";
 
 const validationSchema = yup.object().shape({
-  card_fullname: yup.string().required().label("fullname"),
-  card_number: yup.string().required().label("number"),
-  card_expiry: yup.string().required().label("expiry"),
-  card_cvc: yup.string().required().label("cvc")
+  card_fullname: yup
+    .string()
+    .required()
+    .label("fullname"),
+  card_number: yup
+    .string()
+    .required()
+    .label("number"),
+  card_expiry: yup
+    .string()
+    .required()
+    .label("expiry"),
+  card_cvc: yup
+    .string()
+    .required()
+    .label("cvc")
 });
 
 class AddCard extends React.Component {
@@ -67,10 +77,9 @@ class AddCard extends React.Component {
   componentWillMount() {}
 
   render() {
-    const { card_fullname, card_number, card_expiry, card_cvc } = this.state;
     return (
       <Subscribe to={[StateContainer]}>
-        {container =>
+        {container => (
           <View style={{ flex: 1, backgroundColor: "#fff" }}>
             <StatusBar backgroundColor="#fff" barStyle="dark-content" />
 
@@ -91,7 +100,7 @@ class AddCard extends React.Component {
               }}
               validationSchema={validationSchema}
             >
-              {formikProps =>
+              {formikProps => (
                 <React.Fragment>
                   <View style={{ flex: 1, backgroundColor: "#fff" }}>
                     <StatusBar backgroundColor="#fff" barStyle="dark-content" />
@@ -277,9 +286,11 @@ class AddCard extends React.Component {
                       </TouchableOpacity>
                     </View>
                   </View>
-                </React.Fragment>}
+                </React.Fragment>
+              )}
             </Formik>
-          </View>}
+          </View>
+        )}
       </Subscribe>
     );
   }

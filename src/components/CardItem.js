@@ -64,31 +64,31 @@ export default class CardItem extends Component {
               }}
             />
           </ImageBackground>
-          {isOpen ? (
-            <View
-              style={{
-                width: moderateScale(45, scaleIndice),
-                height: moderateScale(16, scaleIndice),
-                borderRadius: moderateScale(5, scaleIndice),
-                backgroundColor: isOpen ? "#FEEB18" : "#0C4767",
-                position: "absolute",
-                top: moderateScale(10, scaleIndice),
-                right: moderateScale(10, scaleIndice),
-                justifyContent: "center",
-                alignItems: "center"
-              }}
-            >
-              <Text
+          {isOpen
+            ? <View
                 style={{
-                  color: isOpen ? "#0C4767" : "#FEEB18",
-                  fontSize: moderateScale(7, scaleIndice),
-                  fontWeight: "500"
+                  width: moderateScale(45, scaleIndice),
+                  height: moderateScale(16, scaleIndice),
+                  borderRadius: moderateScale(5, scaleIndice),
+                  backgroundColor: isOpen ? "#FEEB18" : "#0C4767",
+                  position: "absolute",
+                  top: moderateScale(10, scaleIndice),
+                  right: moderateScale(10, scaleIndice),
+                  justifyContent: "center",
+                  alignItems: "center"
                 }}
               >
-                {isOpen ? "Open now" : "Close"}
-              </Text>
-            </View>
-          ) : null}
+                <Text
+                  style={{
+                    color: isOpen ? "#0C4767" : "#FEEB18",
+                    fontSize: moderateScale(7, scaleIndice),
+                    fontWeight: "500"
+                  }}
+                >
+                  {isOpen ? "Open now" : "Close"}
+                </Text>
+              </View>
+            : null}
           <View
             style={{
               width: width_,
@@ -125,75 +125,73 @@ export default class CardItem extends Component {
             </Text>
           </View>
         </View>
-        {showPrice ? (
-          <Text
-            style={{
-              position: "absolute",
-              bottom: moderateScale(13, scaleIndice),
-              right: moderateScale(10, scaleIndice),
-              color: "#272727",
-              fontSize: 12,
-              fontWeight: "700",
-              lineHeight: 12
-            }}
-          >
-            {price}
-          </Text>
-        ) : (
-          <ImageBackground
-            borderRadius={15}
-            source={logo}
-            style={{
-              width: moderateScale(30, scaleIndice),
-              height: moderateScale(30, scaleIndice),
-              position: "absolute",
-              bottom: moderateScale(10, scaleIndice),
-              right: moderateScale(10, scaleIndice)
-            }}
-          >
-            <View
+        {showPrice
+          ? <Text
               style={{
-                backgroundColor: "rgba(0,0,0,.04)",
-                flex: 1,
-                borderRadius: 15
-              }}
-            />
-          </ImageBackground>
-        )}
-        {showDelivery ? (
-          <View
-            style={{
-              flexDirection: "row",
-              position: "absolute",
-              bottom: moderateScale(10, scaleIndice),
-              left: moderateScale(10, scaleIndice)
-            }}
-          >
-            <View
-              style={{
-                width: moderateScale(70, scaleIndice),
-                height: moderateScale(17, scaleIndice),
-                borderRadius: moderateScale(50, scaleIndice),
-                marginRight: moderateScale(3, scaleIndice),
-                marginTop: moderateScale(5, scaleIndice),
-                backgroundColor: "#FEEB18",
-                justifyContent: "center",
-                alignItems: "center"
+                position: "absolute",
+                bottom: moderateScale(13, scaleIndice),
+                right: moderateScale(10, scaleIndice),
+                color: "#272727",
+                fontSize: 12,
+                fontWeight: "700",
+                lineHeight: 12
               }}
             >
-              <Text
+              {price}
+            </Text>
+          : <ImageBackground
+              borderRadius={15}
+              source={logo}
+              style={{
+                width: moderateScale(30, scaleIndice),
+                height: moderateScale(30, scaleIndice),
+                position: "absolute",
+                bottom: moderateScale(10, scaleIndice),
+                right: moderateScale(10, scaleIndice)
+              }}
+            >
+              <View
                 style={{
-                  color: "#0C4767",
-                  fontSize: moderateScale(8, scaleIndice),
-                  fontWeight: "800",
-                  letterSpacing: 0.16
+                  backgroundColor: "rgba(0,0,0,.04)",
+                  flex: 1,
+                  borderRadius: 15
+                }}
+              />
+            </ImageBackground>}
+        {showDelivery
+          ? <View
+              style={{
+                flexDirection: "row",
+                position: "absolute",
+                bottom: moderateScale(10, scaleIndice),
+                left: moderateScale(10, scaleIndice)
+              }}
+            >
+              <View
+                style={{
+                  width: moderateScale(70, scaleIndice),
+                  height: moderateScale(17, scaleIndice),
+                  borderRadius: moderateScale(50, scaleIndice),
+                  marginRight: moderateScale(3, scaleIndice),
+                  marginTop: moderateScale(5, scaleIndice),
+                  backgroundColor: "#FEEB18",
+                  justifyContent: "center",
+                  alignItems: "center"
                 }}
               >
-                {deliveryTime}
-              </Text>
+                <Text
+                  style={{
+                    color: "#0C4767",
+                    fontSize: moderateScale(8, scaleIndice),
+                    fontWeight: "800",
+                    letterSpacing: 0.16
+                  }}
+                >
+                  {deliveryTime}
+                </Text>
+              </View>
             </View>
-          </View>
-        ) : null}
+          : null}
       </View>
     );
   }

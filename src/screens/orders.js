@@ -6,14 +6,25 @@ import {
   Text,
   StatusBar,
   TouchableOpacity,
-  View
+  AsyncStorage,
+  View,
+  FlatList
 } from "react-native";
+import _ from "lodash";
 import Icon from "react-native-vector-icons/Ionicons";
 import { scale, moderateScale, verticalScale } from "react-native-size-matters";
-import { screenWidth, scaleIndice, formatNumber } from "../utils/variables";
+import {
+  screenWidth,
+  scaleIndice,
+  formatNumber,
+  orderStatus
+} from "../utils/variables";
 import { colors } from "../utils/colors";
-
+import { getOrdersByCustumer } from "../services";
 import Carousel from "react-native-snap-carousel";
+import { BSON } from "mongodb-stitch-react-native-sdk";
+const ObjectId = BSON.ObjectId;
+import { connect } from "react-redux";
 class Orders extends Component {
   static navigationOptions = ({ navigation }) => {
     return {
@@ -48,22 +59,48 @@ class Orders extends Component {
   constructor(props) {
     super(props);
     this.state = {
+      orders: [],
       itemLen: 4,
       selected: 0,
-      steps: []
+      steps: ["Pending"]
     };
   }
-  componentWillMount() {
+  componentWillMount() {}
+  componentDidMount() {
     setTimeout(() => {
-      // this.state.steps.push("All");
-      this.setState(prevState => ({
-        steps: ["Placed", "On the way", "Delivered", "All"]
+      this.setState(() => ({
+        steps: ["Pending", "On the way", "Delivered", "All"]
       }));
-    }, 100);
+    }, 400);
+    getOrdersByCustumer(new ObjectId(this.props.user.user_id))
+      .then(results => {
+        this.setState(
+          {
+            orders: results
+          },
+          () => {
+            // console.log(this.state.orders);
+          }
+        );
+      })
+      .catch(error => {
+        console.log(error);
+      });
   }
+  getList = list => {
+    let arr = [];
+    for (let [key, value] of Object.entries(
+      _.groupBy(list, item => item.asset[0].legalName)
+    )) {
+      //console.log(`name:'${key}', list: ${JSON.stringify(value)}`);
+      arr.push({ name: `${key}`, list: value });
+    }
+
+    return arr;
+  };
 
   render() {
-    const { selected, steps, itemLen } = this.state;
+    const { selected, steps, orders } = this.state;
     return (
       <View style={{ flex: 1 }}>
         <StatusBar backgroundColor="blue" barStyle={"dark-content"} />
@@ -72,16 +109,22 @@ class Orders extends Component {
           /*                               Swipe category                               */
           /* -------------------------------------------------------------------------- */}
 
-          <View style={{ height: 40 }}>
+          <View style={{ height: 40, marginTop: 10 }}>
             <Carousel
-              onSnapToItem={index =>
-                this.setState({ selected: index, itemLen: steps[index].length })
-              }
+              onSnapToItem={index => {
+                if (steps && steps[0]) {
+                  this.setState({
+                    selected: index,
+                    itemLen: steps[index].length
+                  });
+                }
+              }}
               layout={"default"}
               ref={c => {
                 this._carousel = c;
               }}
               data={steps}
+              style={{ paddingVertical: 20 }}
               renderItem={({ item, index }) => {
                 //this.setState({ itemLen: item.length });
                 return (
@@ -94,7 +137,6 @@ class Orders extends Component {
                     <Text
                       style={{
                         fontSize: moderateScale(15, scaleIndice),
-                        marginHorizontal: moderateScale(0, scaleIndice),
                         color: selected != index ? "#8E8E93" : colors.blue,
                         fontWeight: selected === index ? "600" : "100"
                       }}
@@ -109,159 +151,146 @@ class Orders extends Component {
               itemWidth={100}
               itemHeight={30}
             />
+            <View
+              style={{
+                alignSelf: "center",
+                marginVertical: 5,
+                marginBottom: 8,
+
+                height: moderateScale(8, scaleIndice),
+                width: moderateScale(8, scaleIndice),
+                borderRadius: moderateScale(4, scaleIndice),
+                backgroundColor: "#0C4767"
+              }}
+            />
           </View>
-          <ScrollView style={{ flex: 9, padding: 10 }}>
-            {1 == 0 ? (
-              <View
-                style={{
-                  alignItems: "center",
-                  justifyContent: "center",
-                  height: 100,
-                  backgroundColor: "#fff",
-                  width: screenWidth - 60,
-                  marginTop: 90,
-                  marginBottom: 30,
-                  alignSelf: "center",
-                  shadowColor: "#000",
-                  shadowOpacity: 0.15,
-                  borderRadius: 12,
-                  elevation: 1,
-                  shadowRadius: 2,
-                  shadowOffset: {
-                    height: 2,
-                    width: 0
-                  }
-                }}
-              >
-                <Text
-                  style={{
-                    color: "#000",
-                    opacity: 1,
-                    fontSize: moderateScale(16, scaleIndice),
-                    fontWeight: "600"
-                  }}
-                >
-                  {"No order found"}
-                </Text>
-              </View>
-            ) : null}
-            {[
-              {
-                orderNumber: 3432453,
-                step: "Placed",
-                shop: "Valerio Canez",
-                items: [
-                  { name: "LG Smart TV 60”" },
-                  { name: "Toaster 2 Slices White" }
-                ]
-              },
-              {
-                orderNumber: 3432453,
-                step: "Confirmed",
-                shop: "Char-Broil",
-                items: [{ name: "Barbecue Char-Broil" }]
-              },
-              {
-                orderNumber: 3432453,
-                step: "Delivered",
-                shop: "Char-Broil",
-                items: [
-                  { name: "Barbecue Char-Broil" },
-                  { name: "Barbecue Char-Broil" },
-                  { name: "Barbecue Char-Broil" }
-                ]
-              },
-              {
-                orderNumber: 3432453,
-                shop: "General Electric",
-                step: "On the way",
-                items: [{ name: "LG Smart TV 60” " }]
-              }
-            ]
-              .filter(i =>
-                selected == steps.length - 1 ? true : i.step == steps[selected]
-              )
-              .map((item, index) => (
-                <View
-                  key={JSON.stringify(item + index)}
-                  style={{
-                    backgroundColor: "#fff",
-                    width: screenWidth - 60,
-                    marginTop: 0,
-                    marginBottom: 30,
-                    alignSelf: "center",
-                    shadowColor: "#000",
-                    shadowOpacity: 0.15,
-                    borderRadius: 12,
-                    elevation: 1,
-                    shadowRadius: 4,
-                    shadowOffset: {
-                      height: 2,
-                      width: 0
-                    }
-                  }}
-                >
-                  <View
+          {orders.length > 0 ? (
+            <ScrollView style={{ flex: 9, padding: 10 }}>
+              <FlatList
+                style={{}}
+                showsVerticalScrollIndicator={false}
+                data={this.getList(
+                  this.state.orders.filter(
+                    i =>
+                      JSON.stringify(i.history[i.history.length - 1])
+                        .toLowerCase()
+                        .indexOf(steps[selected].toLowerCase()) != -1 ||
+                      steps[selected] == "All"
+                  )
+                )}
+                keyExtractor={item => JSON.stringify(item)}
+                renderItem={({ item, index }) => (
+                  <TouchableOpacity
+                    key={JSON.stringify(item + index)}
                     style={{
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                      flexDirection: "row",
-                      marginVertical: 10,
-                      padding: 15,
-                      borderBottomColor: "#f9f9f9",
-                      borderBottomWidth: 1
+                      backgroundColor: "#fff",
+                      shadowColor: "#000",
+                      shadowOpacity: 0.1,
+                      elevation: 1,
+                      shadowRadius: 3,
+                      shadowOffset: {
+                        height: 0,
+                        width: 0
+                      },
+                      margin: 20,
+                      borderRadius: 12,
+                      paddingVertical: 20
+                      // width: screenWidth - 60,
+                      // marginTop: 0,
+                      // marginBottom: 30,
+                      // alignSelf: "center",
+                      // shadowColor: "#000",
+                      // shadowOpacity: 0.15,
+                      // borderRadius: 12,
+                      // elevation: 1,
+                      // shadowRadius: 4,
+                      // shadowOffset: {
+                      //   height: 0,
+                      //   width: 0
+                      // }
                     }}
                   >
-                    <Text
-                      style={{
-                        fontSize: 12,
-                        color: colors.grey
-                      }}
-                    >
-                      Order ID: #{item.orderNumber}
-                    </Text>
-                    <View
-                      style={{
-                        backgroundColor: colors.blue,
-                        paddingHorizontal: 7,
-                        paddingVertical: 4,
-                        borderRadius: 10,
-                        justifyContent: "center",
-                        alignItems: "center"
-                      }}
-                    >
-                      <Text style={{ fontSize: 10, color: colors.white }}>
-                        {item.step}
-                      </Text>
-                    </View>
-                  </View>
-                  {item.items.map((item1, index) => (
-                    <OrderItem
-                      key={item + index}
-                      title={item1.name}
-                      subTitle={item.shop}
-                      image={{
-                        uri:
-                          "https://media.istockphoto.com/photos/business-and-education-background-picture-id671101136?k=6&m=671101136&s=612x612&w=0&h=5-HtieP2_hJIR_RZS8x8KqgMaXwOZlt6AtRaiNCROd4="
-                      }}
-                      price={23}
-                      stock={44}
-                      count={3232}
-                      total={444}
-                      status={"pending"}
-                      updateCount={() => {}}
-                    />
-                  ))}
-                </View>
-              ))}
-          </ScrollView>
+                    {/* <View
+                        style={{
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                          flexDirection: "row",
+                          marginVertical: 10,
+                          padding: 15,
+                          borderBottomColor: "#f9f9f9",
+                          borderBottomWidth: 1
+                        }}
+                      >
+                        <Text
+                          style={{
+                            fontSize: 12,
+                            color: colors.grey
+                          }}
+                        />
+                        <View
+                          style={{
+                            backgroundColor: colors.blue,
+                            paddingHorizontal: 7,
+                            paddingVertical: 4,
+                            borderRadius: 10,
+                            justifyContent: "center",
+                            alignItems: "center"
+                          }}
+                        >
+                          <Text style={{ fontSize: 10, color: colors.white }}>
+                            {steps[selected]}
+                          </Text>
+                        </View>
+                      </View> */}
+                    {item.list.map((item1, index1) => (
+                      <TouchableOpacity
+                        key={JSON.stringify(item1 + index1)}
+                        onPress={() =>
+                          this.props.navigation.navigate("OrderDetails", {
+                            products: item.list,
+                            asset: item
+                          })
+                        }
+                      >
+                        <OrderItem
+                          key={item1 + index1}
+                          title={
+                            item1.product[0].name.length <= 22
+                              ? item1.product[0].name
+                              : item1.product[0].name.substring(0, 22) + "..."
+                          }
+                          subTitle={item.name}
+                          image={
+                            item1.product[0] &&
+                            item1.product[0].pictures &&
+                            item1.product[0].pictures[0]
+                              ? {
+                                  uri: item1.product[0].pictures[0].url
+                                }
+                              : require("../images/logo_mrkt.jpg")
+                          }
+                          price={item1.price}
+                          status={"pending"}
+                          orderId={item1.orderId}
+                        />
+                      </TouchableOpacity>
+                    ))}
+                  </TouchableOpacity>
+                )}
+              />
+            </ScrollView>
+          ) : null}
         </View>
       </View>
     );
   }
 }
 
-export default Orders;
+const mapStateToProps = state => {
+  const { user } = state.user;
+  return { user };
+};
+export default connect(mapStateToProps, {})(Orders);
 
 export class OrderItem extends Component {
   constructor(props) {
@@ -291,8 +320,8 @@ export class OrderItem extends Component {
             source={this.props.image}
             borderRadius={10}
             style={{
-              width: verticalScale(54),
-              height: verticalScale(54),
+              width: verticalScale(60),
+              height: verticalScale(60),
               alignSelf: "center"
             }}
           />
@@ -303,6 +332,19 @@ export class OrderItem extends Component {
               padding: 10
             }}
           >
+            <Text
+              style={{
+                height: 16,
+                color: "#000",
+                fontSize: scale(10),
+                fontWeight: "400",
+                letterSpacing: -0.29,
+
+                lineHeight: verticalScale(16)
+              }}
+            >
+              {"Order Id: " + this.props.orderId}
+            </Text>
             <Text
               style={{
                 height: 16,
@@ -337,7 +379,7 @@ export class OrderItem extends Component {
                 lineHeight: verticalScale(22)
               }}
             >
-              {formatNumber(this.props.price * this.state.count)}
+              {formatNumber(this.props.price)}
             </Text>
           </View>
         </View>

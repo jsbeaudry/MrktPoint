@@ -5,90 +5,21 @@ import {
   Text,
   StatusBar,
   FlatList,
-  TouchableOpacity,
-  TextInput,
   Platform,
+  TouchableOpacity,
   View
 } from "react-native";
 import _ from "lodash";
 import Icon from "react-native-vector-icons/Ionicons";
 import { moderateScale } from "react-native-size-matters";
-import { Subscribe } from "unstated";
 import { StateContainer } from "../utils/stateContainer";
-import {
-  STATUS_BAR_HEIGHT,
-  scaleIndice,
-  screenWidth,
-  formatNumber
-} from "../utils/variables";
-import { CartItem, addMultipleOrder } from "../components";
-import { addOrder } from "../services/stitch";
-import { Stitch } from "mongodb-stitch-react-native-sdk";
-const mystates = new StateContainer();
-import { AsyncStorage } from "react-native";
-let datas = [
-  {
-    cretedAt: 16,
-    currency: "usd",
-    delivery_time: "10 - 20 mins",
-    image:
-      "https://thumbor.forbes.com/thumbor/960x0/https%3A%2F%2Fblogs-images.forbes.com%2Fgordonkelly%2Ffiles%2F2019%2F07%2FScreenshot-2019-07-15-at-02.32.05.jpg",
-    name: 'TETS-4916.A - LED 50" WESTPOINT PC IN HDMI',
-    price: 375,
-    product_by: "Tecno",
-    shop: "Valerio Canez S.A.",
-    stock: 2
-  },
-  {
-    cretedAt: 10,
-    currency: "usd",
-    delivery_time: "10 - 20 mins",
-    image:
-      "https://thumbor.forbes.com/thumbor/960x0/https%3A%2F%2Fblogs-images.forbes.com%2Fgordonkelly%2Ffiles%2F2019%2F07%2FScreenshot-2019-07-15-at-02.32.05.jpg",
-    name: "kdftu",
-    price: 88,
-    product_by: "Tecno",
-    shop: "Valerio Canez S.A.",
-    stock: 5
-  },
-  {
-    cretedAt: 94,
-    currency: "usd",
-    delivery_time: "10 - 20 mins",
-    image:
-      "https://thumbor.forbes.com/thumbor/960x0/https%3A%2F%2Fblogs-images.forbes.com%2Fgordonkelly%2Ffiles%2F2019%2F07%2FScreenshot-2019-07-15-at-02.32.05.jpg",
-    name: "GVS04BDWSS - 4cuft Wine Cooler General Electric",
-    price: 550,
-    product_by: "Tecno",
-    shop: "Valerio Canez S.A.",
-    stock: 3
-  },
-  {
-    cretedAt: 49,
-    currency: "htg",
-    delivery_time: "10 - 20 mins",
-    image:
-      "https://thumbor.forbes.com/thumbor/960x0/https%3A%2F%2Fblogs-images.forbes.com%2Fgordonkelly%2Ffiles%2F2019%2F07%2FScreenshot-2019-07-15-at-02.32.05.jpg",
-    name: "LZ1705D - SOFA BED RED WITH BLUETOOTH METAL LEG",
-    price: 2403,
-    product_by: "Tecno",
-    shop: "Thomson",
-    stock: 200
-  },
-  {
-    cretedAt: 93,
-    currency: "usd",
-    delivery_time: "10 - 20 mins",
-    image:
-      "https://thumbor.forbes.com/thumbor/960x0/https%3A%2F%2Fblogs-images.forbes.com%2Fgordonkelly%2Ffiles%2F2019%2F07%2FScreenshot-2019-07-15-at-02.32.05.jpg",
-    name: "K12UM - SDMO/KOHLER 12KW SILENT GENERATOR",
-    price: 10000,
-    product_by: "Tecno",
-    shop: "Thomson",
-    stock: 5
-  }
-];
-class Orders extends React.Component {
+import { scaleIndice, screenWidth, formatNumber } from "../utils/variables";
+
+import { CartItem } from "../components";
+import { connect } from "react-redux";
+import { addItem, setCarts } from "../redux/actions/bags";
+import { update } from "../services/stitch";
+class CardTab extends React.Component {
   static navigationOptions = ({ navigation }) => {
     return {
       title: "Bags",
@@ -127,27 +58,17 @@ class Orders extends React.Component {
     };
   }
 
-  async componentWillMount() {
-    try {
-      const value = await AsyncStorage.getItem("items");
-      //alert(value);
-      if (value !== null) {
-        // We have data!!
-        //alert(value);
-        this.setState({ bags: JSON.parse(value) });
-      }
-    } catch (error) {
-      // Error retrieving data
-      alert("Error");
-    }
+  componentWillMount() {
+    this.props.setCarts();
   }
-  async componentDidMount() {
+  componentDidMount() {
     for (let [key, value] of Object.entries(this.state.bags)) {
-      //console.log(`name:'${key}', list: ${JSON.stringify(value)}`);
       this.state.shops.push({ name: `${key}`, list: value });
     }
-    //console.log(this.state.shops);
+
     this.setState({ shops: this.state.shops });
+
+    console.log(this.props.carts);
   }
 
   getList = list => {
@@ -161,370 +82,390 @@ class Orders extends React.Component {
 
     return arr;
   };
+
   // Render any loading content that you like here
   render() {
-    const { bags, shops } = this.state;
     return (
-      <Subscribe to={[StateContainer]}>
-        {container =>
-          <View style={{ flex: 1 }}>
-            <StatusBar backgroundColor="#ffffff" barStyle="dark-content" />
+      <View style={{ flex: 1 }}>
+        <StatusBar backgroundColor="#ffffff" barStyle="dark-content" />
 
-            {/* -------------------------------------------------------------------------- */
-            /*                                   header                                   */
-            /* -------------------------------------------------------------------------- */}
+        {/* -------------------------------------------------------------------------- */
+        /*                                   header                                   */
+        /* -------------------------------------------------------------------------- */}
 
-            <View style={{ flex: 1 }}>
-              <ScrollView
-                style={{ flex: 9, padding: 0 }}
-                showsVerticalScrollIndicator={false}
-              >
-                {this.getList(container.getItems()).length === 0
-                  ? <View
-                      style={{
-                        alignItems: "center",
-                        justifyContent: "center",
-                        height: 100,
-                        backgroundColor: "#fff",
-                        width: screenWidth - 30,
-                        marginTop: 90,
-                        marginBottom: 30,
-                        alignSelf: "center"
-                      }}
-                    >
-                      <Text
-                        style={{
-                          color: "#000",
-                          opacity: 1,
-                          fontSize: moderateScale(16, scaleIndice),
-                          fontWeight: "600"
-                        }}
-                      >
-                        {"No item in your cart"}
-                      </Text>
-                    </View>
-                  : <FlatList
-                      style={{}}
-                      showsVerticalScrollIndicator={false}
-                      data={this.getList(container.getItems())}
-                      keyExtractor={item => JSON.stringify(item)}
-                      renderItem={({ item, index }) =>
-                        <View
-                          style={{
-                            backgroundColor: "#fff",
-                            width: screenWidth - 30,
-                            marginTop: 10,
-                            paddingTop: 10,
-                            marginBottom: 20,
-                            alignSelf: "center",
-                            shadowColor: "#000",
-                            shadowOpacity: 0.15,
-                            borderRadius: 12,
-                            elevation: 1,
-                            shadowRadius: 4,
-                            shadowOffset: {
-                              height: 2,
-                              width: 0
-                            }
-                          }}
-                        >
-                          {item.list.map((item1, index1) =>
-                            <TouchableOpacity
-                              key={JSON.stringify(item1 + index1)}
-                              onLongPress={() => {
-                                Alert.alert(
-                                  "Delete shipping address",
-                                  "Do you really want remove this address?",
-                                  [
-                                    {
-                                      text: "Cancel",
-                                      onPress: () =>
-                                        console.log("Cancel Pressed"),
-                                      style: "cancel"
-                                    },
-                                    {
-                                      text: "Remove",
-                                      onPress: () => {}
-                                    }
-                                  ],
-                                  { cancelable: false }
-                                );
-                              }}
-                            >
-                              <CartItem
-                                last={
-                                  true
-                                  //index1 != item.items.length - 1 ? false : true
-                                }
-                                id={index}
-                                subTitle={item.name}
-                                title={
-                                  item1.name.length <= 17
-                                    ? item1.name
-                                    : item1.name.substring(0, 17) + "..."
-                                }
-                                image={{
-                                  uri:
-                                    "http://archive.warwicka.co.uk/file_store/archive_images/Shop_Logo_1_July120151.jpg"
-                                }}
-                                price={item1.price}
-                                stock={10}
-                                count={item1.count}
-                                updateCount={count => {}}
-                              />
-                            </TouchableOpacity>
-                          )}
-                        </View>}
-                    />}
-              </ScrollView>
-
-              {/* -------------------------------------------------------------------------- */
-              /*                                  Promotion                                 */
-              /* -------------------------------------------------------------------------- */}
-
-              {/* <View
-            style={{
-              height: 50,
-              backgroundColor: "#EEEEEE",
-              alignItems: "center",
-              justifyContent: "space-between",
-              padding: 15,
-              flexDirection: "row"
-            }}
+        <View style={{ flex: 1 }}>
+          <ScrollView
+            style={{ flex: 9, padding: 0 }}
+            showsVerticalScrollIndicator={false}
           >
-            <Text
-              style={{
-                color: "#929292",
-                opacity: 1,
-                fontSize: 16,
-                textAlign: "center"
-              }}
-            >
-              {"Promo code"}
-            </Text>
-            <View style={{ flexDirection: "row" }}>
-              <TextInput
-                style={{
-                  color: "#1D1D1D",
-                  opacity: 1,
-                  fontSize: 16,
-                  paddingHorizontal: 5,
-                  marginHorizontal: 5,
-                  textAlign: "center"
-                }}
-              >
-                {"summer2019"}
-              </TextInput>
-              <TouchableOpacity
-                style={{
-                  backgroundColor: "#999",
-                  height: 30,
-                  width: 30,
-                  borderRadius: 15,
-                  marginTop: -5,
-                  marginLeft: 5,
-                  justifyContent: "center",
-                  alignItems: "center"
-                }}
-              >
-                <Icon
-                  name="ios-close"
-                  type="ionicon"
-                  color="#000"
-                  size={30}
-                  iconStyle={{}}
-                />
-              </TouchableOpacity>
-            </View>
-          </View> */}
-
-              {/* -------------------------------------------------------------------------- */
-              /*                                Total charge                                */
-              /* -------------------------------------------------------------------------- */}
+            {this.props.carts.length === 0 ? (
               <View
                 style={{
-                  backgroundColor: "#fff",
-                  height: 1
-                }}
-              />
-              <View
-                style={{
-                  flexDirection: "row",
-                  justifyContent: "center",
-                  alignItems: "space-between",
-                  backgroundColor: "#fff",
-                  marginTop: 0,
-                  height: 30,
-                  paddingHorizontal: 15
-                }}
-              >
-                <View
-                  style={{
-                    flex: 1
-                  }}
-                >
-                  <Text
-                    style={{
-                      color: "#929292",
-                      fontSize: 15,
-                      fontWeight: "500",
-                      letterSpacing: -0.41,
-                      lineHeight: 22,
-                      textAlign: "left",
-                      alignSelf: "flex-start"
-                    }}
-                  >
-                    {"Amount"}
-                  </Text>
-                </View>
-                <View
-                  style={{
-                    flex: 1
-                  }}
-                >
-                  <Text
-                    style={{
-                      color: "#000",
-                      fontSize: 12,
-                      fontWeight: "400",
-                      letterSpacing: -0.36,
-                      lineHeight: 22,
-                      alignSelf: "flex-end"
-                    }}
-                  >
-                    {formatNumber(container.getItemsTotal())}
-                  </Text>
-                </View>
-              </View>
-              <View
-                style={{
-                  flexDirection: "row",
-                  justifyContent: "center",
-                  alignItems: "space-between",
-                  backgroundColor: "#fff",
-                  marginTop: 0,
-                  height: 30,
-
-                  paddingHorizontal: 15
-                }}
-              >
-                <View
-                  style={{
-                    flex: 1
-                  }}
-                >
-                  <Text
-                    style={{
-                      color: "#929292",
-                      fontSize: 15,
-                      fontWeight: "500",
-                      letterSpacing: -0.41,
-                      lineHeight: 22,
-                      textAlign: "left",
-                      alignSelf: "flex-start"
-                    }}
-                  >
-                    {"Delivery Charges"}
-                  </Text>
-                </View>
-                <View
-                  style={{
-                    flex: 1
-                  }}
-                >
-                  <Text
-                    style={{
-                      color: "#000",
-                      fontSize: 12,
-                      fontWeight: "400",
-                      letterSpacing: -0.36,
-                      lineHeight: 22,
-                      alignSelf: "flex-end"
-                    }}
-                  >
-                    {formatNumber(0)}
-                  </Text>
-                </View>
-              </View>
-
-              <View
-                style={{
-                  flexDirection: "row",
-                  justifyContent: "center",
-                  alignItems: "space-between",
-                  backgroundColor: "#fff",
-                  height: 40,
-
-                  paddingHorizontal: 15
-                }}
-              >
-                <View
-                  style={{
-                    flex: 1
-                  }}
-                >
-                  <Text
-                    style={{
-                      color: "#929292",
-                      fontSize: 15,
-                      fontWeight: "bold",
-                      letterSpacing: -0.41,
-                      lineHeight: 22,
-                      textAlign: "left",
-                      alignSelf: "flex-start"
-                    }}
-                  >
-                    {"Total amount"}
-                  </Text>
-                </View>
-                <View
-                  style={{
-                    flex: 1
-                  }}
-                >
-                  <Text
-                    style={{
-                      color: "#000",
-                      fontSize: 12,
-                      fontWeight: "900",
-                      letterSpacing: -0.36,
-                      lineHeight: 22,
-                      alignSelf: "flex-end"
-                    }}
-                  >
-                    {formatNumber(container.getItemsTotal())}
-                  </Text>
-                </View>
-              </View>
-              <TouchableOpacity
-                style={{
-                  height: 53,
-                  width: 305,
-                  justifyContent: "center",
                   alignItems: "center",
-                  backgroundColor: "#0C4767",
-                  borderRadius: 26.52,
-                  alignSelf: "center",
-                  marginVertical: 20
-                }}
-                onPress={() => {
-                  this.props.navigation.navigate("Address");
+                  justifyContent: "center",
+                  height: 100,
+                  backgroundColor: "#fff",
+                  width: screenWidth - 60,
+                  marginTop: 90,
+                  marginBottom: 30,
+                  alignSelf: "center"
                 }}
               >
                 <Text
                   style={{
-                    fontSize: 15,
-                    color: "#fff"
+                    color: "#000",
+                    opacity: 1,
+                    fontSize: moderateScale(16, scaleIndice),
+                    fontWeight: "600"
                   }}
                 >
-                  {"Checkout"}
+                  {"No item in your cart"}
                 </Text>
-              </TouchableOpacity>
+              </View>
+            ) : (
+              <FlatList
+                style={{}}
+                showsVerticalScrollIndicator={false}
+                data={this.getList(this.props.carts)}
+                keyExtractor={item => JSON.stringify(item)}
+                renderItem={({ item }) => (
+                  <View
+                    style={{
+                      backgroundColor: "#fff",
+                      width: screenWidth - 30,
+                      marginTop: 10,
+                      paddingTop: 10,
+                      marginBottom: 20,
+                      alignSelf: "center",
+                      shadowColor: "#000",
+                      shadowOpacity: 0.15,
+                      borderRadius: 12,
+                      elevation: 1,
+                      shadowRadius: 4,
+                      shadowOffset: {
+                        height: 2,
+                        width: 0
+                      }
+                    }}
+                  >
+                    {item.list.map((item1, index1) => {
+                      let indice = _.findIndex(this.props.carts, function(o) {
+                        console.log(o._id);
+                        return o._id == item1._id;
+                      });
+                      let total =
+                        item1.count *
+                        item1.price *
+                        (item1.currency.toUpperCase() ==
+                        item1.assetCurrency.toUpperCase()
+                          ? 1
+                          : item1.assetRate.value);
+                      return (
+                        <TouchableOpacity
+                          key={JSON.stringify(item1 + index1)}
+                          onLongPress={() => {
+                            Alert.alert(
+                              "Delete shipping address",
+                              "Do you really want remove this address?",
+                              [
+                                {
+                                  text: "Cancel",
+                                  onPress: () => console.log("Cancel Pressed"),
+                                  style: "cancel"
+                                },
+                                {
+                                  text: "Remove",
+                                  onPress: () => {
+                                    this.props.carts.splice(indice, 1);
+                                    update(
+                                      "bags",
+                                      { custumerId: this.props.user.user_id },
+                                      { products: this.props.carts }
+                                    )
+                                      .then(() => {
+                                        this.props.setCarts();
+                                      })
+                                      .catch(error => {
+                                        console.log(error);
+                                      });
+                                  }
+                                }
+                              ],
+                              { cancelable: false }
+                            );
+                          }}
+                        >
+                          <CartItem
+                            last={
+                              true
+                              //index1 != item.items.length - 1 ? false : true
+                            }
+                            id={indice}
+                            subTitle={item1.assetName}
+                            title={
+                              item1.name.length <= 17
+                                ? item1.name
+                                : item1.name.substring(0, 17) + "..."
+                            }
+                            image={
+                              item1.pictures && item1.pictures[0]
+                                ? {
+                                    uri: item1.pictures[0].url
+                                  }
+                                : require("../images/logo_mrkt.jpg")
+                            }
+                            price={formatNumber(
+                              total,
+                              item1.assetCurrency.toUpperCase()
+                            )}
+                            stock={10}
+                            count={item1.count}
+                            updateCount={(count, id) => {
+                              this.props.carts[id].count = count;
+
+                              update(
+                                "bags",
+                                { custumerId: this.props.user.user_id },
+                                { products: this.props.carts }
+                              )
+                                .then(() => {
+                                  this.props.setCarts();
+                                })
+                                .catch(error => {
+                                  console.log(error);
+                                });
+                            }}
+                          />
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </View>
+                )}
+              />
+            )}
+          </ScrollView>
+
+          {/* -------------------------------------------------------------------------- */
+          /*                                Total charge                                */
+          /* -------------------------------------------------------------------------- */}
+          <View
+            style={{
+              backgroundColor: "#fff",
+              height: 1
+            }}
+          />
+          <View
+            style={{
+              flexDirection: "row",
+              justifyContent: "center",
+              alignItems: "space-between",
+              backgroundColor: "#fff",
+              marginTop: 0,
+              height: 30,
+              paddingHorizontal: 15
+            }}
+          >
+            <View
+              style={{
+                flex: 1
+              }}
+            >
+              <Text
+                style={{
+                  color: "#929292",
+                  fontSize: 15,
+                  fontWeight: "500",
+                  letterSpacing: -0.41,
+                  lineHeight: 22,
+                  textAlign: "left",
+                  alignSelf: "flex-start"
+                }}
+              >
+                {"Amount"}
+              </Text>
             </View>
-          </View>}
-      </Subscribe>
+            <View
+              style={{
+                flex: 1
+              }}
+            >
+              <Text
+                style={{
+                  color: "#000",
+                  fontSize: 12,
+                  fontWeight: "400",
+                  letterSpacing: -0.36,
+                  lineHeight: 22,
+                  alignSelf: "flex-end"
+                }}
+              >
+                {formatNumber(
+                  this.props.carts.reduce(
+                    (a, b) =>
+                      a +
+                      b.price *
+                        b.count *
+                        (b.currency.toUpperCase() ==
+                        b.assetCurrency.toUpperCase()
+                          ? 1
+                          : b.assetRate.value),
+                    0
+                  )
+                ) + "HTG"}
+              </Text>
+            </View>
+          </View>
+          <View
+            style={{
+              flexDirection: "row",
+              justifyContent: "center",
+              alignItems: "space-between",
+              backgroundColor: "#fff",
+              marginTop: 0,
+              height: 30,
+
+              paddingHorizontal: 15
+            }}
+          >
+            <View
+              style={{
+                flex: 1
+              }}
+            >
+              <Text
+                style={{
+                  color: "#929292",
+                  fontSize: 15,
+                  fontWeight: "500",
+                  letterSpacing: -0.41,
+                  lineHeight: 22,
+                  textAlign: "left",
+                  alignSelf: "flex-start"
+                }}
+              >
+                {"Delivery Charges"}
+              </Text>
+            </View>
+            <View
+              style={{
+                flex: 1
+              }}
+            >
+              <Text
+                style={{
+                  color: "#000",
+                  fontSize: 12,
+                  fontWeight: "400",
+                  letterSpacing: -0.36,
+                  lineHeight: 22,
+                  alignSelf: "flex-end"
+                }}
+              >
+                {formatNumber(0)}
+              </Text>
+            </View>
+          </View>
+
+          <View
+            style={{
+              flexDirection: "row",
+              justifyContent: "center",
+              alignItems: "space-between",
+              backgroundColor: "#fff",
+              height: 40,
+
+              paddingHorizontal: 15,
+              marginBottom: this.props.carts.length == 0 ? 50 : 0
+            }}
+          >
+            <View
+              style={{
+                flex: 1
+              }}
+            >
+              <Text
+                style={{
+                  color: "#929292",
+                  fontSize: 15,
+                  fontWeight: "bold",
+                  letterSpacing: -0.41,
+                  lineHeight: 22,
+                  textAlign: "left",
+                  alignSelf: "flex-start"
+                }}
+              >
+                {"Total amount"}
+              </Text>
+            </View>
+            <View
+              style={{
+                flex: 1
+              }}
+            >
+              <Text
+                style={{
+                  color: "#000",
+                  fontSize: 12,
+                  fontWeight: "900",
+                  letterSpacing: -0.36,
+                  lineHeight: 22,
+                  alignSelf: "flex-end"
+                }}
+              >
+                {formatNumber(
+                  this.props.carts.reduce(
+                    (a, b) =>
+                      a +
+                      b.price *
+                        b.count *
+                        (b.currency.toUpperCase() ==
+                        b.assetCurrency.toUpperCase()
+                          ? 1
+                          : b.assetRate.value),
+                    0
+                  )
+                ) + "HTG"}
+              </Text>
+            </View>
+          </View>
+          {this.props.carts.length > 0 ? (
+            <TouchableOpacity
+              style={{
+                height: 53,
+                width: 305,
+                justifyContent: "center",
+                alignItems: "center",
+                backgroundColor: "#0C4767",
+                borderRadius: 26.52,
+                alignSelf: "center",
+                marginVertical: 20
+              }}
+              onPress={() => {
+                this.props.navigation.navigate("Address");
+              }}
+            >
+              <Text
+                style={{
+                  fontSize: 15,
+                  color: "#fff"
+                }}
+              >
+                {"Checkout"}
+              </Text>
+            </TouchableOpacity>
+          ) : null}
+        </View>
+      </View>
     );
   }
 }
 
-export default Orders;
+const mapStateToProps = state => {
+  const { carts } = state.bags;
+  const { user } = state.user;
+  return { carts, user };
+};
+export default connect(mapStateToProps, {
+  addItem,
+  setCarts
+})(CardTab);

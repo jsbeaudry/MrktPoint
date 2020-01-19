@@ -13,21 +13,15 @@ import {
 import FontAwesome from "react-native-vector-icons/FontAwesome";
 import { moderateScale } from "react-native-size-matters";
 import { StateContainer } from "../utils/stateContainer";
-import { colors } from "../utils/colors";
 import {
   screenWidth,
   STATUS_BAR_HEIGHT,
   scaleIndice
 } from "../utils/variables";
-import { Icon } from "../utils/icons";
 import { CardItem } from "../components";
-
-import { Stitch, RemoteMongoClient } from "mongodb-stitch-react-native-sdk";
+import { formatNumber } from "../utils/variables";
 import { getAll } from "../services";
 import { Ionicons } from "@expo/vector-icons";
-const mystates = new StateContainer({
-  orders: []
-});
 
 export default class Tab1 extends Component {
   constructor(props) {
@@ -35,40 +29,49 @@ export default class Tab1 extends Component {
     this.state = {
       products: [],
       load: false,
-      pageText: this.props.navigation.getParam("pageText", "")
+      pageText: this.props.navigation.getParam("pageText", ""),
+      business: this.props.navigation.getParam("business", null)
     };
   }
 
   componentWillMount() {}
 
   componentDidMount() {
-    // Find 10 documents and log them to console. this.state.business.asset
+    if (
+      this.state.pageText == "Best sellers" ||
+      this.state.pageText == "Trending"
+    ) {
+      // Find asset products
+      let obj = {
+        "asset.id": this.state.business.id.toString()
+      };
 
-    getAll("products", {}, null).then(results => {
-      console.log("Results:", results[0]);
-      let resp = results;
-      for (let index = 0; index < resp.length; index++) {
-        const element = resp[index];
-        this.state.products.push({
-          name: element.name,
-          product_by: "Tecno",
-          price: element.price,
-          stock: element.quantity,
-          currency: element.currency,
-          delivery_time: "10 - 20 mins",
-          cretedAt: Math.floor(Math.random() * 100) + 1,
-          image:
-            "https://thumbor.forbes.com/thumbor/960x0/https%3A%2F%2Fblogs-images.forbes.com%2Fgordonkelly%2Ffiles%2F2019%2F07%2FScreenshot-2019-07-15-at-02.32.05.jpg"
+      getAll("products", obj, null).then(results => {
+        this.setState({
+          products: results.map(element => {
+            return {
+              assetId: this.state.business.id,
+              productId: element._id,
+              name: element.name,
+              product_by: element.brand,
+              price: element.price ? element.price : 0.0,
+              stock: element.quantity,
+              currency: element.currency
+                ? element.currency.toUpperCase()
+                : "HTG",
+              delivery_time: "10 - 20 mins",
+              cretedAt: Math.floor(Math.random() * 100) + 1,
+              shop: this.state.business.name,
+              image: element.pictures
+            };
+          }),
+          load: true
         });
-      }
-      this.setState(prevState => ({
-        products: prevState.products,
-        load: true
-      }));
-    });
+      });
+    }
   }
   render() {
-    const { products, pageText, load } = this.state;
+    const { products, pageText, load, business } = this.state;
     return (
       <View style={{ flex: 1 }}>
         <StatusBar backgroundColor="#fff" barStyle="dark-content" />
@@ -104,27 +107,40 @@ export default class Tab1 extends Component {
                 backgroundColor: "#fff",
                 alignSelf: "center"
               }}
-              data={products.sort((a, b) => {
-                return a.cretedAt - b.cretedAt;
-              })}
+              data={products}
               numColumns={2}
               keyExtractor={item => JSON.stringify(item)}
-              renderItem={({ item, index }) => (
+              renderItem={({ item }) => (
                 <TouchableOpacity
                   onPress={() => {
                     this.props.navigation.navigate("Details", {
-                      product: item
+                      product: item,
+                      business: this.state.business
                     });
                   }}
                 >
                   <CardItem
                     height_={220}
-                    image={{ uri: item.image }}
+                    image={
+                      item.image && item.image[0]
+                        ? { uri: item.image[0].url }
+                        : require("../images/logo_mrkt.jpg")
+                    }
                     backgroundColor="#596b9f"
-                    title={item.name}
+                    title={
+                      item.name.length <= 17
+                        ? item.name
+                        : item.name.substring(0, 17) + "..."
+                    }
                     subTitle={item.product_by}
                     showPrice
-                    price={`${item.price} ${item.currency}`}
+                    price={`${formatNumber(
+                      item.price *
+                        (business.currency == item.currency
+                          ? 1
+                          : business.all.rate.value),
+                      business.currency
+                    )} `}
                     deliveryTime={item.delivery_time}
                   />
                 </TouchableOpacity>

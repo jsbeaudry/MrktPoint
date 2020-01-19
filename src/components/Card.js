@@ -9,7 +9,17 @@ let height = moderateScale(230, indice);
 // ////////////////////////Card//////////////////////////
 export default class Card extends Component {
   render() {
-    const { h, w, showText, borderRad, imageUrl, opacity, title } = this.props;
+    const {
+      h,
+      w,
+      showText,
+      borderRad,
+      imageUrl,
+      opacity,
+      title,
+      showTextBellow,
+      textBellow
+    } = this.props;
     width = moderateScale(w, indice);
     height = moderateScale(h, indice);
 
@@ -35,11 +45,26 @@ export default class Card extends Component {
               alignItems: "center"
             }}
           >
-            {showText === true ? (
-              <Text style={styles.text}>{title}</Text>
-            ) : null}
+            {showText === true
+              ? <Text style={styles.text}>
+                  {title}
+                </Text>
+              : null}
           </View>
         </ImageBackground>
+
+        {showTextBellow
+          ? <Text
+              style={{
+                alignSelf: "center",
+                color: "gray",
+                fontWeight: "500",
+                marginTop: 5
+              }}
+            >
+              {textBellow}
+            </Text>
+          : null}
       </View>
     );
   }

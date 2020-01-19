@@ -1,8 +1,6 @@
 import React from "react";
 import {
-  StyleSheet,
   Platform,
-  Image,
   Alert,
   Text,
   StatusBar,
@@ -10,17 +8,19 @@ import {
   ImageBackground,
   View
 } from "react-native";
-import { AsyncStorage } from "react-native";
 import Carousel from "react-native-snap-carousel";
 import { screenWidth, screenHeight } from "../utils/variables";
 import Icon from "react-native-vector-icons/Ionicons";
 import { colors } from "../utils/colors";
-import { Subscribe } from "unstated";
-import { StateContainer } from "../utils/stateContainer";
-let myStates = new StateContainer();
-const address_step = require("../images/address_step.png");
+
 const heightCarousel = screenHeight > 736 ? 440 : 400;
-class Delivery extends React.Component {
+
+import { updateUser } from "../services/stitch";
+import { connect } from "react-redux";
+import { addItem, setCarts, selectedAddr } from "../redux/actions/bags";
+import { setUser } from "../redux/actions/user";
+
+class DeliveryAddress extends React.Component {
   static navigationOptions = ({ navigation }) => {
     return {
       title: "Address",
@@ -34,7 +34,7 @@ class Delivery extends React.Component {
             paddingLeft: 20
           }}
           onPress={() => {
-            navigation.goBack();
+            navigation.navigate("Main");
           }}
         >
           <Icon
@@ -58,152 +58,133 @@ class Delivery extends React.Component {
       address: []
     };
   }
-  componentWillMount() {}
+  componentDidMount() {
+    //this.load("address");
+  }
 
-  _retrieveData = async key => {
-    try {
-      const value = await AsyncStorage.getItem(key);
-      if (value !== null) {
-        // We have data!!
-        //alert(value);
-        this.setState({
-          address: JSON.parse(value)
-        });
-
-        setTimeout(() => {
-          this.setState(prevState => ({
-            address: prevState.address
-          }));
-        }, 1000);
-      }
-    } catch (error) {
-      // Error retrieving data
-    }
-  };
   render() {
-    const { address } = this.state;
-    if (address.length == 0) {
-      this._retrieveData("address");
-    }
-
     return (
-      <Subscribe to={[StateContainer]}>
-        {container =>
-          <View style={{ flex: 1, backgroundColor: "#fff" }}>
-            <StatusBar backgroundColor="#fff" barStyle="dark-content" />
+      <View style={{ flex: 1, backgroundColor: "#fff" }}>
+        <StatusBar backgroundColor="#fff" barStyle="dark-content" />
 
-            {container.getAddresses().length === 0
-              ? <View style={{ flex: 1 }}>
-                  <Text
-                    style={{
-                      color: colors.black,
-                      width: 170,
-                      fontSize: 22,
-                      marginLeft: 20,
-                      marginTop: 10,
-                      fontWeight: "bold"
-                    }}
-                  >
-                    You don’t have any address associated with your account.
-                  </Text>
-                  <Image
-                    source={require("../images/nocard.png")}
-                    style={{
-                      width: 100,
-                      height: 100,
-                      marginTop: 20,
-                      marginLeft: 20,
-                      borderColor: "#eee",
-                      borderWidth: 1,
-                      alignSelf: "flex-start",
-                      resizeMode: "contain"
-                    }}
-                  />
-                  <TouchableOpacity
-                    style={{
-                      position: "absolute",
-                      bottom: 20,
-                      height: 53,
-                      width: 305,
-                      justifyContent: "center",
-                      alignItems: "center",
-                      alignSelf: "center",
-                      backgroundColor: "#0C4767",
-                      borderRadius: 26.52,
+        {this.props.user.addressShipping.length <= 1 ? (
+          <View style={{ flex: 1 }}>
+            <Text
+              style={{
+                color: colors.black,
+                width: screenWidth - 100,
+                fontSize: 22,
+                marginLeft: 20,
+                marginTop: 10,
+                fontWeight: "bold"
+              }}
+            >
+              You don’t have any address associated with your account.
+            </Text>
 
-                      marginVertical: 10
-                    }}
-                    onPress={() => {
-                      this.props.navigation.navigate("AddAddress");
-                    }}
-                  >
-                    <Text
-                      style={{
-                        fontSize: 15,
-                        color: "#fff"
-                      }}
-                    >
-                      {"+ Add Credit Card"}
-                    </Text>
-                  </TouchableOpacity>
-                </View>
-              : <View style={{ flex: 1 }}>
-                  <Text
-                    style={{
-                      color: colors.black,
-                      fontSize: 28,
-                      width: 180,
-                      marginLeft: 20,
-                      marginTop: 50,
-                      fontWeight: "bold"
-                    }}
-                  >
-                    Here are your address.
-                  </Text>
-                  <CarouselItems address={container.getAddresses()} />
+            <TouchableOpacity
+              style={{
+                position: "absolute",
+                bottom: 20,
+                height: 53,
+                width: 305,
+                justifyContent: "center",
+                alignItems: "center",
+                alignSelf: "center",
+                backgroundColor: "#0C4767",
+                borderRadius: 26.52,
 
-                  <View
-                    style={{
-                      position: "absolute",
-                      bottom: 15,
-                      alignSelf: "center",
-                      justifyContent: "center",
-                      alignItems: "center"
-                    }}
-                  >
-                    <TouchableOpacity
-                      style={{
-                        height: 53,
-                        width: 305,
-                        justifyContent: "center",
-                        alignItems: "center",
-                        backgroundColor: "#0C4767",
-                        borderRadius: 26.52,
+                marginVertical: 10
+              }}
+              onPress={() => {
+                this.props.navigation.navigate("AddAddress", {
+                  backTo: "AddressList"
+                });
+              }}
+            >
+              <Text
+                style={{
+                  fontSize: 15,
+                  color: "#fff"
+                }}
+              >
+                {"+ Add New Address"}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        ) : (
+          <View style={{ flex: 1 }}>
+            <Text
+              style={{
+                color: colors.black,
+                fontSize: 28,
+                width: 180,
+                marginLeft: 20,
+                marginTop: 50,
+                fontWeight: "bold"
+              }}
+            >
+              Here are your address.
+            </Text>
+            <CarouselItems
+              address={this.props.user.addressShipping}
+              hasDelete={address => {
+                updateUser(
+                  "users",
+                  { user_id: this.props.user.user_id },
+                  { addressShipping: address }
+                )
+                  .then(() => {
+                    this.props.setUser();
+                  })
+                  .catch(error => {
+                    console.log(error);
+                  });
+              }}
+            />
 
-                        marginVertical: 10
-                      }}
-                      onPress={() => {
-                        this.props.navigation.navigate("AddAddress");
-                      }}
-                    >
-                      <Text
-                        style={{
-                          fontSize: 15,
-                          color: "#fff"
-                        }}
-                      >
-                        {"+ Add New Address"}
-                      </Text>
-                    </TouchableOpacity>
-                  </View>
-                </View>}
-          </View>}
-      </Subscribe>
+            <View
+              style={{
+                position: "absolute",
+                bottom: 15,
+                alignSelf: "center",
+                justifyContent: "center",
+                alignItems: "center"
+              }}
+            >
+              <TouchableOpacity
+                style={{
+                  height: 53,
+                  width: 305,
+                  justifyContent: "center",
+                  alignItems: "center",
+                  backgroundColor: "#0C4767",
+                  borderRadius: 26.52,
+
+                  marginVertical: 10
+                }}
+                onPress={() => {
+                  this.props.navigation.navigate("AddAddress", {
+                    backTo: "AddressList"
+                  });
+                }}
+              >
+                <Text
+                  style={{
+                    fontSize: 15,
+                    color: "#fff"
+                  }}
+                >
+                  {"+ Add New Address"}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        )}
+      </View>
     );
   }
 }
-
-export default Delivery;
 
 class CarouselItems extends React.Component {
   constructor(props) {
@@ -243,20 +224,8 @@ class CarouselItems extends React.Component {
                     {
                       text: "Remove",
                       onPress: () => {
-                        this.state.address.splice(index, 1);
-                        this.setState(
-                          {
-                            address: this.state.address
-                          },
-                          () => {
-                            AsyncStorage.setItem(
-                              "address",
-                              JSON.stringify(address)
-                            )
-                              .then(() => {})
-                              .catch(e => alert(e));
-                          }
-                        );
+                        address.splice(index, 1);
+                        this.props.hasDelete(address);
                       }
                     }
                   ],
@@ -274,7 +243,7 @@ class CarouselItems extends React.Component {
                 borderColor: "transparent",
                 borderRadius: 20,
                 height: heightCarousel,
-                width: 250,
+                width: 210,
                 justifyContent: "center",
                 alignItems: "center"
               }}
@@ -361,7 +330,7 @@ class CarouselItems extends React.Component {
                   >
                     {item.address1 +
                       ", " +
-                      item.addres2 +
+                      item.address2 +
                       ", " +
                       item.city +
                       ", " +
@@ -380,3 +349,15 @@ class CarouselItems extends React.Component {
     );
   }
 }
+
+const mapStateToProps = state => {
+  const { carts, selectedAddress } = state.bags;
+  const { user } = state.user;
+  return { carts, selectedAddress, user };
+};
+export default connect(mapStateToProps, {
+  addItem,
+  setCarts,
+  setUser,
+  selectedAddr
+})(DeliveryAddress);

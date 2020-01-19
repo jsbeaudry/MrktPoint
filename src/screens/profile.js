@@ -5,6 +5,7 @@ import {
   Image,
   Text,
   StatusBar,
+  AsyncStorage,
   TouchableOpacity,
   View
 } from "react-native";
@@ -20,6 +21,8 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { Stitch } from "mongodb-stitch-react-native-sdk";
 import { getOne } from "../services";
+import { connect } from "react-redux";
+import { setUser } from "../redux/actions/user";
 class Profile extends React.Component {
   constructor(props) {
     super(props);
@@ -69,31 +72,14 @@ class Profile extends React.Component {
 
   componentWillMount() {
     this._loadClient();
-    let data_ = Stitch.defaultAppClient.auth.activeUserAuthInfo;
-    if (
-      Stitch.defaultAppClient.auth.activeUserAuthInfo &&
-      Stitch.defaultAppClient.auth.activeUserAuthInfo.userId != undefined
-    ) {
-      getOne("users", { user_id: data_.userId })
-        .then(results => {
-          console.log(results);
-
-          this.setState(
-            {
-              user: results[0]
-            },
-            () => {
-              //alert(JSON.stringify(this.state.user.image.base64));
-            }
-          );
-        })
-        .catch(error => {
-          console.log(error);
-        });
-    }
+    this.props.setUser();
   }
   render() {
-    const { user } = this.state;
+    // this.props.navigation.addListener("didFocus", payload => {
+    //   //console.debug("didFocus", payload);
+    //   //this.load("user");
+    // });
+    const { user } = this.props;
     return (
       <View style={{ flex: 1, backgroundColor: "#fff" }}>
         <StatusBar backgroundColor="#fff" barStyle="dark-content" />
@@ -140,7 +126,7 @@ class Profile extends React.Component {
             source={{
               uri: user.image
                 ? `data:image/jpg;base64,${user.image.base64}`
-                : "https://www.leisureopportunities.co.uk/images/995586_746594.jpg"
+                : "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR3aZcSyIAkT_7lCPpE8Ruc5k9Kk-yXYQdFHfjD1QbM1VZQLyod&s"
             }}
             borderRadius={40}
             style={{
@@ -168,7 +154,7 @@ class Profile extends React.Component {
                 textAlign: "center"
               }}
             >
-              {user.firstName + " " + user.lastName}
+              {user.firstName ? user.firstName + " " + user.lastName : "..."}
             </Text>
             <View style={styles.tagBlock}>
               <Text style={styles.tagText}>
@@ -180,17 +166,23 @@ class Profile extends React.Component {
 
         <ScrollView style={{ paddingTop: 10 }}>
           {[
-            { title: "Wish List", icon: "shopping", goTo: "" },
+            { title: "Favorites", icon: "shop", goTo: "FavoritesStore" },
+            { title: "Wish List", icon: "shopping", goTo: "WishList" },
             { title: "Edit Profile", icon: "user", goTo: "EditProfile" },
             { title: "My orders", icon: "bag", goTo: "Orders" },
-            { title: "My address", icon: "home", goTo: "AddressList" },
             {
-              title: "Payment method",
-              icon: "Icon",
-              goTo: "CardList",
+              title: "My address",
+              icon: "home",
+              goTo: "AddressList",
               margin: 50
             }
-          ].map(item =>
+            // {
+            //   title: "Payment method",
+            //   icon: "Icon",
+            //   goTo: "CardList",
+            //   margin: 50
+            // }
+          ].map(item => (
             <TouchableOpacity
               key={JSON.stringify(item)}
               onPress={() => {
@@ -239,7 +231,7 @@ class Profile extends React.Component {
                 />
               </View>
             </TouchableOpacity>
-          )}
+          ))}
 
           <TouchableOpacity
             onPress={() => {
@@ -532,7 +524,12 @@ class Profile extends React.Component {
   }
 }
 
-export default Profile;
+const mapStateToProps = state => {
+  const { user } = state.user;
+  return { user };
+};
+
+export default connect(mapStateToProps, { setUser })(Profile);
 
 const styles = StyleSheet.create({
   tagBlock: {

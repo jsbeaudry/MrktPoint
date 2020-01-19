@@ -10,11 +10,10 @@ import {
   FlatList
 } from "react-native";
 import _ from "lodash";
-import FontAwesome from "react-native-vector-icons/FontAwesome";
+import { FontAwesome, Ionicons } from "react-native-vector-icons";
+
 import { moderateScale } from "react-native-size-matters";
-import { colors } from "../utils/colors";
-import { Icon } from "../utils/icons";
-import { Business } from "../utils/class";
+import Carousel from "react-native-snap-carousel";
 import {
   STATUS_BAR_HEIGHT,
   screenWidth,
@@ -27,6 +26,7 @@ export default class Search extends React.Component {
     super(props);
     this.state = {
       users: [],
+      searchText: "",
       categories: [
         {
           image:
@@ -59,49 +59,45 @@ export default class Search extends React.Component {
   }
 
   componentWillMount() {
-    // let business = new Business();
-    // business.name = "Thompson Electronics";
-    // business.image =
-    //   "http://www.flashhaiti.com/ads-library/Thompson%20Cell/thompson_cell-ad9.jpg";
-    // business.subTitle = "slogan i don't know";
-    // business.delivery_time = "10 - 20 mins";
-    // business.is_open = true;
-    // business.free_delivery = true;
-    // this.state.businesses.push(business);
+    getAll("assets", {})
+      .then(results => {
+        this.setState({
+          businesses: results
+            .filter(i => i.currency && i.pictures)
+            .map(element => {
+              return {
+                id: element._id,
+                owner_id: element.owner_id,
+                type: element.type,
+                name: element.legalName,
+                logo: element.logo ? element.logo : "asdadas",
+                image:
+                  element.pictures &&
+                  element.pictures[0] &&
+                  element.pictures[0].url
+                    ? { uri: element.pictures[0].url }
+                    : require("../images/logo_mrkt.jpg"),
+                subTitle: element.slogan,
+                currency: element.currency,
+                categories: element.categories ? element.categories : [],
+                delivery_time: element.delivery_time,
+                is_open: true,
+                free_delivery: true
+              };
+            })
+        });
+      })
+      .catch(error => {
+        console.log(error);
 
-    // const business_concat = _.concat(this.state.businesses, []);
-
-    // this.setState({
-    //   businesses: business_concat
-    // });
-
-    getAll("assets", {}).then(results => {
-      this.setState({
-        businesses: results.map(element => {
-          return {
-            id: element._id,
-            owner_id: element.owner_id,
-            type: element.type,
-            name: element.legalName,
-            logo: element.logo,
-            // image:
-            //   element.pictures && element.pictures[0] && element.pictures[0].url
-            //     ? element.pictures[0].url
-            //     : element.logo,
-            image: require("../images/logo_mrkt.jpg"),
-            subTitle: element.slogan,
-            categories: element.categories ? element.categories : [],
-            delivery_time: "10 - 20 mins",
-            is_open: true,
-            free_delivery: true
-          };
-        })
+        this.setState({
+          businesses: []
+        });
       });
-    });
   }
 
   render() {
-    const { businesses, categories } = this.state;
+    const { businesses, categories, searchText } = this.state;
     return (
       <View style={{}}>
         <StatusBar backgroundColor="#fff" barStyle="dark-content" />
@@ -121,15 +117,55 @@ export default class Search extends React.Component {
           >
             {"Top categories"}
           </Text>
-
-          <View style={{}}>
+          <View style={{ height: 250 }}>
+            <Carousel
+              layout={"default"}
+              onSnapToItem={() => {}}
+              ref={c => {
+                this._carousel = c;
+              }}
+              data={categories}
+              renderItem={({ item }) => {
+                return (
+                  <TouchableHighlight
+                    style={{ borderRadius: 10 }}
+                    underlayColor={"#eee"}
+                    style={{
+                      flex: 1
+                    }}
+                    onPress={() =>
+                      this.props.navigation.navigate("AllProducts", {
+                        backScreen: "Main",
+                        pageText: item.title
+                      })
+                    }
+                  >
+                    <Card
+                      imageUrl={{ uri: item.image }}
+                      title={item.title}
+                      borderRad={10}
+                      h={222}
+                      opacity={0.4}
+                      w={167}
+                      showText
+                    />
+                  </TouchableHighlight>
+                );
+              }}
+              sliderWidth={screenWidth}
+              sliderHeight={300}
+              itemWidth={200}
+              itemHeight={222}
+            />
+          </View>
+          {/* <View style={{}}>
             <FlatList
               style={{ paddingLeft: 10 }}
               showsHorizontalScrollIndicator={false}
               horizontal
               data={categories}
               keyExtractor={item => JSON.stringify(item)}
-              renderItem={({ item }) =>
+              renderItem={({ item }) => (
                 <TouchableHighlight
                   style={{ borderRadius: 10 }}
                   underlayColor={"#eee"}
@@ -140,7 +176,8 @@ export default class Search extends React.Component {
                     this.props.navigation.navigate("AllProducts", {
                       backScreen: "Main",
                       pageText: item.title
-                    })}
+                    })
+                  }
                 >
                   <Card
                     imageUrl={{ uri: item.image }}
@@ -151,9 +188,10 @@ export default class Search extends React.Component {
                     w={167}
                     showText
                   />
-                </TouchableHighlight>}
+                </TouchableHighlight>
+              )}
             />
-          </View>
+          </View> */}
 
           <View style={{ marginTop: -20, marginBottom: 100 }}>
             <View
@@ -217,7 +255,7 @@ export default class Search extends React.Component {
             >
               <FlatList
                 style={{
-                  flex: 1,
+                  height: 200,
                   paddingVertical: 10,
                   paddingLeft: 10,
                   alignSelf: "flex-start",
@@ -228,7 +266,7 @@ export default class Search extends React.Component {
                 data={businesses}
                 horizontal
                 keyExtractor={item => JSON.stringify(item)}
-                renderItem={({ item }) =>
+                renderItem={({ item }) => (
                   <TouchableHighlight
                     style={{ borderRadius: 30 }}
                     underlayColor={"#eee"}
@@ -244,8 +282,11 @@ export default class Search extends React.Component {
                       h={137}
                       w={137}
                       showText={false}
+                      showTextBellow={true}
+                      textBellow={item.name.substring(0, 20)}
                     />
-                  </TouchableHighlight>}
+                  </TouchableHighlight>
+                )}
               />
             </View>
           </View>
@@ -294,29 +335,24 @@ export default class Search extends React.Component {
                 marginLeft: moderateScale(10, scaleIndice),
                 fontSize: moderateScale(14, scaleIndice)
               }}
+              value={searchText}
+              onChangeText={searchText => this.setState({ searchText })}
             />
+            {searchText != "" ? (
+              <TouchableOpacity
+                onPress={() => {
+                  this.setState({ searchText: "" });
+                }}
+                style={{}}
+              >
+                <Ionicons
+                  name="ios-close"
+                  size={moderateScale(30, scaleIndice)}
+                  color={"#000"}
+                />
+              </TouchableOpacity>
+            ) : null}
           </View>
-          {/* <TouchableOpacity
-            onPress={() => {
-              this.props.navigation.navigate("Carts");
-            }}
-            style={{
-              flex: 9,
-              height: moderateScale(33, scaleIndice),
-              marginRight: moderateScale(10, scaleIndice),
-              backgroundColor: colors.blue,
-              alignSelf: "center",
-              borderRadius: moderateScale(17, scaleIndice),
-              justifyContent: "center",
-              alignItems: "center"
-            }}
-          >
-            <Icon
-              name="bag"
-              size={moderateScale(17, scaleIndice)}
-              color={colors.white}
-            />
-          </TouchableOpacity> */}
         </View>
       </View>
     );
