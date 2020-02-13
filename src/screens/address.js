@@ -246,7 +246,10 @@ class Delivery extends React.Component {
                 marginVertical: 10
               }}
               onPress={() => {
+                if(this.props.user.addressShipping.length > 0)
                 this.props.navigation.navigate("Payment");
+                else
+                Alert.alert("Address","Add an address before continue")
               }}
             >
               <Text

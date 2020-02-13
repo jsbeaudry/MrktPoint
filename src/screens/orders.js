@@ -269,7 +269,7 @@ class Orders extends Component {
                                 }
                               : require("../images/logo_mrkt.jpg")
                           }
-                          price={item1.price}
+                          price={item1.price*item1.assetRate}
                           status={"pending"}
                           orderId={item1.orderId}
                         />
@@ -379,7 +379,7 @@ export class OrderItem extends Component {
                 lineHeight: verticalScale(22)
               }}
             >
-              {formatNumber(this.props.price)}
+              {formatNumber(this.props.price)+" HTG"}
             </Text>
           </View>
         </View>

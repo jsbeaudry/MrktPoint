@@ -64,8 +64,7 @@ class Profile extends React.Component {
       this.setState(
         {
           currentUserId: client.auth.user.id
-        },
-        () => this.props.navigation.navigate("Main")
+        }
       );
     }
   }

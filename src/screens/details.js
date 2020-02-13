@@ -733,7 +733,10 @@ class Details extends React.Component {
                   </Text>
                 </View>
                 <TouchableOpacity
-                  onPress={() => this.props.navigation.navigate("Review")}
+                  onPress={() =>{
+                    //this.props.navigation.navigate("Review")
+                  }
+                }
                   style={{
                     height: moderateScale(40, scaleIndice),
                     justifyContent: "center",

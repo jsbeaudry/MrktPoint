@@ -335,7 +335,7 @@ export class orderDetails extends Component {
                           alignSelf: "flex-end"
                         }}
                       >
-                        {formatNumber(selected.price)}
+                        {formatNumber(selected.price*selected.assetRate)+" HTG"}
                       </Text>
                     </View>
                   </View>
@@ -486,7 +486,7 @@ export class orderDetails extends Component {
                           alignSelf: "flex-end"
                         }}
                       >
-                        {formatNumber(selected.price * selected.quantity)}
+                        {formatNumber(selected.price * selected.quantity*selected.assetRate)+" HTG"}
                       </Text>
                     </View>
                   </View>

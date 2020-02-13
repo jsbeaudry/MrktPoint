@@ -4,7 +4,8 @@ import { Stitch } from "mongodb-stitch-react-native-sdk";
 
 import { getOne, getAll } from "../../services/stitch";
 
-export const setUser = () => {
+export const setUser = () => { 
+  
   let user = {};
   user.favorites = [];
   user.wishlist = [];
@@ -17,6 +18,7 @@ export const setUser = () => {
     usingCellular: false,
     autoLock: false
   };
+  
   return dispatch => {
     dispatch({ type: SET_USER, user: user });
     getOne("users", { user_id: Stitch.defaultAppClient.auth.user.id })
@@ -24,6 +26,16 @@ export const setUser = () => {
         user = results[0];
         if (user.addressShipping == null) {
           user.addressShipping = [];
+        }
+        if (user.settings == null) {
+          user.settings = {
+            promotion: false,
+            newItems: false,
+            messages: false,
+            autoNight: false,
+            usingCellular: false,
+            autoLock: false
+          };
         }
         dispatch({ type: SET_USER, user: user });
         getAll("favorites_assets", { custumerId: results[0].user_id })

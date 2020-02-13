@@ -17,7 +17,9 @@ import { colors } from "../utils/colors";
 import { Subscribe } from "unstated";
 import { StateContainer } from "../utils/stateContainer";
 const address_step = require("../images/address_step.png");
+
 const heightCarousel = screenHeight > 736 ? 440 : 400;
+
 class Delivery extends React.Component {
   static navigationOptions = ({ navigation }) => {
     return {
@@ -81,46 +83,96 @@ class Delivery extends React.Component {
     const { cards } = this.state;
     return (
       <Subscribe to={[StateContainer]}>
-        {container =>
+        {container => (
           <View style={{ flex: 1, backgroundColor: "#fff" }}>
             <StatusBar backgroundColor="#fff" barStyle="dark-content" />
 
-            {container.getCards().length === 0
-              ? <View style={{ flex: 1 }}>
+            {container.getCards().length === 0 ? (
+              <View style={{ flex: 1 }}>
+                <Text
+                  style={{
+                    color: colors.black,
+                    width: 170,
+                    fontSize: 22,
+                    marginLeft: 20,
+                    marginTop: 10,
+                    fontWeight: "bold"
+                  }}
+                >
+                  You don’t have any card associated with your account.
+                </Text>
+                <Image
+                  source={require("../images/nocard.png")}
+                  style={{
+                    width: 100,
+                    height: 100,
+                    marginTop: 20,
+                    marginLeft: 20,
+                    borderColor: "#eee",
+                    borderWidth: 0,
+                    alignSelf: "flex-start",
+                    resizeMode: "contain"
+                  }}
+                />
+                <TouchableOpacity
+                  style={{
+                    position: "absolute",
+                    bottom: 20,
+                    height: 53,
+                    width: 305,
+                    justifyContent: "center",
+                    alignItems: "center",
+                    alignSelf: "center",
+                    backgroundColor: "#0C4767",
+                    borderRadius: 26.52,
+
+                    marginVertical: 10
+                  }}
+                  onPress={() => {
+                    this.props.navigation.navigate("AddCard");
+                  }}
+                >
                   <Text
                     style={{
-                      color: colors.black,
-                      width: 170,
-                      fontSize: 22,
-                      marginLeft: 20,
-                      marginTop: 10,
-                      fontWeight: "bold"
+                      fontSize: 15,
+                      color: "#fff"
                     }}
                   >
-                    You don’t have any card associated with your account.
+                    {"+ Add Credit Card"}
                   </Text>
-                  <Image
-                    source={require("../images/nocard.png")}
-                    style={{
-                      width: 100,
-                      height: 100,
-                      marginTop: 20,
-                      marginLeft: 20,
-                      borderColor: "#eee",
-                      borderWidth: 0,
-                      alignSelf: "flex-start",
-                      resizeMode: "contain"
-                    }}
-                  />
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <View style={{ flex: 1 }}>
+                <Text
+                  style={{
+                    color: colors.black,
+                    fontSize: 28,
+                    width: 180,
+                    marginLeft: 20,
+                    marginTop: 50,
+                    fontWeight: "bold"
+                  }}
+                >
+                  Here are your cards.
+                </Text>
+
+                <CarouselItems cards={container.getCards()} goto={this.props} />
+                <View
+                  style={{
+                    position: "absolute",
+                    bottom: 15,
+                    alignSelf: "center",
+                    justifyContent: "center",
+                    alignItems: "center"
+                  }}
+                >
                   <TouchableOpacity
                     style={{
-                      position: "absolute",
-                      bottom: 20,
                       height: 53,
                       width: 305,
                       justifyContent: "center",
                       alignItems: "center",
-                      alignSelf: "center",
                       backgroundColor: "#0C4767",
                       borderRadius: 26.52,
 
@@ -136,64 +188,14 @@ class Delivery extends React.Component {
                         color: "#fff"
                       }}
                     >
-                      {"+ Add Credit Card"}
+                      {"+ Add New Card"}
                     </Text>
                   </TouchableOpacity>
                 </View>
-              : <View style={{ flex: 1 }}>
-                  <Text
-                    style={{
-                      color: colors.black,
-                      fontSize: 28,
-                      width: 180,
-                      marginLeft: 20,
-                      marginTop: 50,
-                      fontWeight: "bold"
-                    }}
-                  >
-                    Here are your cards.
-                  </Text>
-
-                  <CarouselItems
-                    cards={container.getCards()}
-                    goto={this.props}
-                  />
-                  <View
-                    style={{
-                      position: "absolute",
-                      bottom: 15,
-                      alignSelf: "center",
-                      justifyContent: "center",
-                      alignItems: "center"
-                    }}
-                  >
-                    <TouchableOpacity
-                      style={{
-                        height: 53,
-                        width: 305,
-                        justifyContent: "center",
-                        alignItems: "center",
-                        backgroundColor: "#0C4767",
-                        borderRadius: 26.52,
-
-                        marginVertical: 10
-                      }}
-                      onPress={() => {
-                        this.props.navigation.navigate("AddCard");
-                      }}
-                    >
-                      <Text
-                        style={{
-                          fontSize: 15,
-                          color: "#fff"
-                        }}
-                      >
-                        {"+ Add New Card"}
-                      </Text>
-                    </TouchableOpacity>
-                  </View>
-                </View>}
-          </View>}
+              </View>
+            )}
+          </View>
+        )}
       </Subscribe>
     );
   }

@@ -115,7 +115,8 @@ class Wishlist extends Component {
       categories: element.categories ? element.categories : [],
       delivery_time: "10 - 20 mins",
       is_open: true,
-      free_delivery: true
+      free_delivery: true,
+      all:element
     };
   };
   render() {

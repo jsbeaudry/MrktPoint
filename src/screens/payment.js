@@ -239,6 +239,7 @@ class Payment extends React.Component {
             }}
             onPress={() => {
               if (this.props.carts.length > 0) {
+     
                 let orders = this.props.carts.map(i => {
                   return {
                     orderId: orderId_,
@@ -246,7 +247,7 @@ class Payment extends React.Component {
                     custumerId: new ObjectId(this.props.user.user_id),
                     assetId: new ObjectId(i.asset.id),
                     assetCurrency: i.assetCurrency,
-                    assetRate: i.rate.value,
+                    assetRate: i.assetRate.value,
                     price: i.price,
                     productCurrency: i.currency,
                     quantity: i.count,

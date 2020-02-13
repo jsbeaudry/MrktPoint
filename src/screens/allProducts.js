@@ -13,11 +13,13 @@ import {
 import FontAwesome from "react-native-vector-icons/FontAwesome";
 import { moderateScale } from "react-native-size-matters";
 import { StateContainer } from "../utils/stateContainer";
+
 import {
   screenWidth,
   STATUS_BAR_HEIGHT,
   scaleIndice
 } from "../utils/variables";
+
 import { CardItem } from "../components";
 import { formatNumber } from "../utils/variables";
 import { getAll } from "../services";
